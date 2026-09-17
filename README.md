@@ -3,7 +3,7 @@
 **Plain sailing in the distracting digital world**
 
 <p align="center">
-  <img src="https://github.com/ulyngs/digital-habits-focus/blob/main/Shared%20(Extension)/Resources/images/icon-512.png?raw=true" alt="Digital Habits: Focus Icon" width="120" />
+  <img src="https://github.com/digitalhabits/dh-focus/blob/main/Shared%20(Extension)/Resources/images/icon-512.png?raw=true" alt="Digital Habits: Focus Icon" width="120" />
 </p>
 
 Source code for the Safari, Chrome, and Firefox extension **Digital Habits: Focus**, available for Mac, iOS, and other devices.

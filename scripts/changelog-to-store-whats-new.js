@@ -12,7 +12,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const GITHUB_REPO_URL = 'https://github.com/ulyngs/digital-habits-focus';
+const GITHUB_REPO_URL = 'https://github.com/digitalhabits/dh-focus';
 const DEFAULT_INTRO = 'This update comes with some helpful improvements.';
 const PLATFORM_TAG_RE = /^\[(macos|ios|firefox|chrome|edge)\]\s*/i;
 

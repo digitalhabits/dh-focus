@@ -21,7 +21,7 @@ keeps section headings, strips markdown and platform tags. Legacy
 Mac / iOS listing description and promotional text live in
 [`store-listing/`](../store-listing/) and are stamped on every Apple submit.
 
-## Secrets (`ulyngs/digital-habits-focus`)
+## Secrets (`digitalhabits/dh-focus`)
 
 ### App Store Connect (Mac + iOS)
 
