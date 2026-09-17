@@ -37,7 +37,7 @@ Digital Habits: Focus is **open source**, developed by the [Centre for Digital H
 ## Installation
 
 - **[Chrome Web Store](https://chromewebstore.google.com/detail/redd-focus-hide-distracti/hhblkhfdjijdinijakbmcpkmdfhoadcd?hl=en-GB)**
-- **[Firefox Add-ons](https://addons.mozilla.org/en-GB/firefox/addon/reddfocus/)**  
+- **[Firefox Add-ons](https://addons.mozilla.org/en-GB/firefox/addon/digitalhabits-focus/)**  
 - **[Apple App Store](https://apps.apple.com/gb/app/mindshield/id1660218371)**  
 
 ## iOS Usage Tip

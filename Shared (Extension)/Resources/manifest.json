@@ -3,7 +3,7 @@
   "default_locale": "en",
   "name": "Digital Habits: Focus",
   "description": "Hide distractions on any site (YouTube, Instagram, LinkedIn, and more).",
-  "version": "6.9.1",
+  "version": "6.9.2",
   "icons": {
     "48": "images/icon-48.png",
     "96": "images/icon-96.png",
@@ -68,6 +68,9 @@
           "none"
         ]
       }
+    },
+    "gecko_android": {
+      "strict_min_version": "120.0"
     }
   }
 }

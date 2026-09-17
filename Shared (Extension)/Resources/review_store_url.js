@@ -10,7 +10,7 @@ const CHROME_WEB_STORE =
     'https://chromewebstore.google.com/detail/redd-focus-hide-distracti/hhblkhfdjijdinijakbmcpkmdfhoadcd';
 
 const FIREFOX_REVIEWS =
-    'https://addons.mozilla.org/en-US/firefox/addon/reddfocus/reviews/';
+    'https://addons.mozilla.org/en-US/firefox/addon/digitalhabits-focus/reviews/';
 
 function extensionScheme() {
     try {
