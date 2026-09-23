@@ -197,6 +197,16 @@
             Object.keys(reset).forEach(function (prop) {
                 uiLayer.style.setProperty(prop, reset[prop], 'important');
             });
+            // Popovers get a ::backdrop. A site that styles backdrops for its
+            // own dialogs would otherwise dim the whole page while we pick.
+            createStyleElement('reddFocusUiLayerStyle', `
+                #${UI_LAYER_ID}::backdrop {
+                    background: transparent !important;
+                    backdrop-filter: none !important;
+                    -webkit-backdrop-filter: none !important;
+                    filter: none !important;
+                }
+            `);
         }
         const parent = getMountParent();
         if (!parent) return null;
@@ -619,6 +629,7 @@
         selectionCaptureLayer.addEventListener('click', selectElementOnClick);
         selectionCaptureLayer.addEventListener('touchend', selectElementOnTap, { passive: false });
         document.addEventListener('keydown', handleKeydown, { capture: true });
+        window.addEventListener('scroll', followHighlightOnScroll, { capture: true, passive: true });
 
         // Update storage to reflect that selection has started
         if (currentSiteIdentifier) {
@@ -635,6 +646,7 @@
         selectionCaptureLayer?.removeEventListener('click', selectElementOnClick);
         selectionCaptureLayer?.removeEventListener('touchend', selectElementOnTap);
         document.removeEventListener('keydown', handleKeydown, { capture: true });
+        window.removeEventListener('scroll', followHighlightOnScroll, { capture: true });
         if (cleanupDragEvents) cleanupDragEvents();
         if (selectionCaptureLayer) selectionCaptureLayer.remove();
         if (feedbackContainer) feedbackContainer.remove();
@@ -685,16 +697,26 @@
             selectorDisplay.style.top = `${Math.min(displayPosY, window.innerHeight - selectorDisplay.offsetHeight - 10)}px`;
             selectorDisplay.style.display = 'block';
         }
-        if (highlightOverlay) {
-            const rect = el.getBoundingClientRect();
-            // In the fixed top-layer container, coordinates are the viewport's;
-            // in <body>, the page's.
-            const inLayer = highlightOverlay.parentNode === uiLayer;
-            highlightOverlay.style.top = `${rect.top + (inLayer ? 0 : window.scrollY)}px`;
-            highlightOverlay.style.left = `${rect.left + (inLayer ? 0 : window.scrollX)}px`;
-            highlightOverlay.style.width = `${rect.width}px`;
-            highlightOverlay.style.height = `${rect.height}px`;
-            highlightOverlay.style.display = 'block';
+        positionHighlight(el);
+    }
+
+    function positionHighlight(el) {
+        if (!highlightOverlay || !el) return;
+        const rect = el.getBoundingClientRect();
+        // In the fixed top-layer container, coordinates are the viewport's;
+        // in <body>, the page's.
+        const inLayer = highlightOverlay.parentNode === uiLayer;
+        highlightOverlay.style.top = `${rect.top + (inLayer ? 0 : window.scrollY)}px`;
+        highlightOverlay.style.left = `${rect.left + (inLayer ? 0 : window.scrollX)}px`;
+        highlightOverlay.style.width = `${rect.width}px`;
+        highlightOverlay.style.height = `${rect.height}px`;
+        highlightOverlay.style.display = 'block';
+    }
+
+    // Viewport coordinates go stale when the page (or any scroller) moves.
+    function followHighlightOnScroll() {
+        if (currentHighlightedElement && highlightOverlay && highlightOverlay.style.display !== 'none') {
+            positionHighlight(currentHighlightedElement);
         }
     }
 
