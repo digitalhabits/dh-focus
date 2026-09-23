@@ -2236,6 +2236,12 @@ footer .friction-customisation {
     color: var(--text-primary);
 }
 
+.settings-row-hint {
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--text-secondary);
+}
+
 .settings-row-control {
     justify-self: end;
     width: var(--settings-control-width);

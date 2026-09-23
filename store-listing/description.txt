@@ -16,4 +16,4 @@ Everywhere you go on the internet, something tries to grab your attention. This 
 
 - Ulrik, Konrad, Tiago, and the Centre for Digital Habits Team (see what we're up to at digitalhabits.org)
 
-NOTE: the extension is open source and collects zero user data. See the source code, flag bugs, or submit suggestions for improvement at https://github.com/digitalhabits/dh-focus
+NOTE: the extension is open source and collects no personal data. In Chrome, Edge and Safari, it sends one anonymous count a day, with an ID that changes every month, so we know how many people use it. You can turn this off in Settings. See the source code, flag bugs, or submit suggestions for improvement at https://github.com/digitalhabits/dh-focus

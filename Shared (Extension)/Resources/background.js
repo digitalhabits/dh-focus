@@ -401,7 +401,75 @@ function connectNative() {
   }
 }
 
+// Anonymous usage ping, so we know roughly how many people use Focus.
+// At most once per UTC day we send { product, platform, key }. The key is
+// a random id that is replaced at the start of each calendar month, so no
+// two months can be linked. Nothing about sites, settings, or the user is
+// sent. Users can turn it off in Settings. Firefox gets no ping: Mozilla
+// would make it opt-in, and the add-ons site already counts daily users.
+const PING_URL = "https://plan.digitalhabits.org/api/ping";
+const PING_STATE_KEY = "usagePing";
+const PING_ENABLED_KEY = "usagePingEnabled";
+const PING_RETRY_MS = 60 * 60_000;
+const IS_FIREFOX = BLOCKED_PAGE_PREFIX.startsWith("moz-extension://");
+let pingSentDay = null;
+let pingInFlight = false;
+let pingLastAttempt = 0;
+
+function pingPlatform() {
+  if (IS_SAFARI) return IS_IOS ? "safari-ios" : "safari-mac";
+  if (/\bEdg\//.test(navigator.userAgent || "")) return "edge";
+  return "chrome";
+}
+
+function randomKey() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16));
+  b[6] = (b[6] & 0x0f) | 0x40;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const h = Array.from(b, x => x.toString(16).padStart(2, "0")).join("");
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
+}
+
+async function pingAllowed() {
+  if (IS_FIREFOX) return false;
+  const stored = await chrome.storage.sync.get(PING_ENABLED_KEY);
+  return stored[PING_ENABLED_KEY] !== false;
+}
+
+async function maybeSendUsagePing() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (pingSentDay === today || pingInFlight) return;
+  if (Date.now() - pingLastAttempt < PING_RETRY_MS) return;
+  pingInFlight = true;
+  pingLastAttempt = Date.now();
+  try {
+    const state = (await chrome.storage.local.get(PING_STATE_KEY))[PING_STATE_KEY] || {};
+    if (state.lastDay === today) {
+      pingSentDay = today;
+      return;
+    }
+    if (!(await pingAllowed())) return;
+    const month = today.slice(0, 7);
+    const key = state.month === month && state.key ? state.key : randomKey();
+    const res = await fetch(PING_URL, {
+      method: "POST",
+      headers: { "content-type": "text/plain" },
+      body: JSON.stringify({ product: "focus", platform: pingPlatform(), key }),
+      credentials: "omit",
+    });
+    if (!res.ok) return;
+    await chrome.storage.local.set({ [PING_STATE_KEY]: { month, key, lastDay: today } });
+    pingSentDay = today;
+  } catch {
+    // Offline or blocked: try again later.
+  } finally {
+    pingInFlight = false;
+  }
+}
+
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  maybeSendUsagePing();
   refreshSafariBlocklist();
   // Cheap early-out when standalone (no active website rules).
   if (!webEnforcementActive()) {
@@ -418,6 +486,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 connectNative();
 refreshSafariBlocklist();
+maybeSendUsagePing();
 // Safari's native handler is request/response only, so keep polling
 // for Digital Habits: Blocker payload changes even when the user sits on a single
 // tab. Compliance is verified by Digital Habits: Blocker from Safari's plist, not

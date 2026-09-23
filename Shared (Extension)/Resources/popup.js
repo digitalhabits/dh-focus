@@ -212,6 +212,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
         setupManualCssSelectors();
 
+        // Anonymous usage ping (sent from background.js). On by default.
+        // Firefox sends no ping, so it gets no switch either.
+        const USAGE_PING_KEY = 'usagePingEnabled';
+
+        function setupUsagePing() {
+            const toggle = document.getElementById('usagePingToggle');
+            if (!toggle) return;
+
+            if (chrome.runtime.getURL('').startsWith('moz-extension://')) {
+                const row = toggle.closest('.settings-row');
+                if (row) row.style.display = 'none';
+                return;
+            }
+
+            chrome.storage.sync.get(USAGE_PING_KEY, function (result) {
+                toggle.checked = result[USAGE_PING_KEY] !== false;
+            });
+
+            toggle.addEventListener('change', function () {
+                chrome.storage.sync.set({ [USAGE_PING_KEY]: toggle.checked });
+            });
+        }
+
+        setupUsagePing();
+
         // ========================================
         // EULA (ReDD 2FA parity: revision + storage.local)
         // ========================================
