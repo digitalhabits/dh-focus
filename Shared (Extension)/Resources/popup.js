@@ -529,34 +529,52 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
-        function captureProtectedHiddenSnapshot() {
-            protectedHiddenAtLock.clear();
+        /** What the lock would protect right now: hidden elements and features that are on. */
+        function collectLockableItems() {
+            const items = new Set();
             if (currentPlatform) {
                 elementsThatCanBeHidden.filter(e => e.startsWith(currentPlatform)).forEach(function (item) {
                     const toggleEl = document.getElementById(item + 'Toggle');
                     if (isElementHidden(item, toggleEl)) {
-                        protectedHiddenAtLock.add(item);
+                        items.add(item);
                     }
                 });
             }
             if (currentSiteIdentifier) {
                 const grayscaleToggle = document.getElementById('grayscaleToggle');
                 if (grayscaleToggle && grayscaleToggle.checked) {
-                    protectedHiddenAtLock.add(`${currentSiteIdentifier}Grayscale`);
+                    items.add(`${currentSiteIdentifier}Grayscale`);
                 }
                 const accessDelayToggle = document.getElementById('accessDelayToggle');
                 if (accessDelayToggle && accessDelayToggle.checked) {
-                    protectedHiddenAtLock.add(`${currentSiteIdentifier}AccessDelay`);
+                    items.add(`${currentSiteIdentifier}AccessDelay`);
                 }
                 const redirectToggle = document.getElementById('redirectToggle');
                 if (redirectToggle && redirectToggle.checked) {
-                    protectedHiddenAtLock.add(`${currentSiteIdentifier}Redirect`);
+                    items.add(`${currentSiteIdentifier}Redirect`);
                 }
                 const redirectUrlInput = document.getElementById('redirectUrl');
                 if (redirectUrlInput && redirectUrlInput.value.trim()) {
-                    protectedHiddenAtLock.add(`${currentSiteIdentifier}RedirectUrl`);
+                    items.add(`${currentSiteIdentifier}RedirectUrl`);
                 }
             }
+            return items;
+        }
+
+        /** Something to lock: an item above, or at least one of the user's own picks. */
+        function hasSomethingToLock() {
+            // A saved redirect address with Redirect off is not something to lock.
+            const active = Array.from(collectLockableItems()).filter(function (key) {
+                return !key.endsWith('RedirectUrl');
+            });
+            if (active.length > 0) return true;
+            const listId = (currentPlatform ? currentSiteIdentifier : 'generic') + 'CustomElements';
+            const list = document.getElementById(listId);
+            return !!(list && list.children.length > 0);
+        }
+
+        function captureProtectedHiddenSnapshot() {
+            protectedHiddenAtLock = collectLockableItems();
         }
 
         function updateLockIcon() {
@@ -1169,6 +1187,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             lockBtn.addEventListener('click', function () {
                 if (!isSettingsLocked) {
+                    if (!hasSomethingToLock()) {
+                        showToast('Nothing to lock yet. Hide something, or turn on Greyscale, Delay or Redirect, then lock.');
+                        return;
+                    }
                     const waitSecs = clampSecondsField(unlockWaitTime);
                     showLockStartDialog(waitSecs, function () {
                         captureProtectedHiddenSnapshot();
