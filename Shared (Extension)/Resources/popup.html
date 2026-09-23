@@ -19,41 +19,43 @@
 <body class="popup-loading">
     <div id="eula-overlay" class="eula-overlay" style="display: none;">
         <div class="screen-container eula-screen-container">
-            <div class="top-bar top-bar-no-border">
-                <div class="top-title-group top-title-group-screen">
-                    <img class="top-logo" src="images/icon-128.png" width="28" height="28" alt="Digital Habits: Focus" />
-                    <div class="top-title-block">
-                        <h2 class="top-title">Welcome to Digital Habits: Focus</h2>
+            <div class="eula-card">
+                <div class="eula-header">
+                    <img class="eula-header-logo" src="images/icon-128.png" width="36" height="36" alt="" />
+                    <div class="eula-header-copy">
+                        <h2 class="eula-header-title">Welcome to Focus</h2>
+                        <p class="eula-header-subtitle">by the Centre for Digital Habits</p>
                     </div>
                 </div>
-            </div>
 
-            <div class="eula-card">
-                <div class="eula-checkbox-row eula-custom-checkbox">
-                    <input type="checkbox" id="eula-agree-checkbox">
-                    <label for="eula-agree-checkbox" class="eula-checkbox-label">
-                        <span class="eula-checkbox-text">
-                            I agree to the Centre for Digital Habits'
-                            <a href="https://digitalhabits.org/eula" target="_blank" rel="noopener noreferrer" class="eula-link">End User
-                                License Agreement</a>
-                        </span>
-                    </label>
+                <div class="eula-body">
+                    <h3 class="eula-body-title">Private by design</h3>
+                    <p id="eula-privacy-lead" class="eula-privacy-lead">We collect no personal data. We only count how many people use Focus.</p>
+                    <details id="eula-how-we-count" class="eula-details">
+                        <summary>How we count</summary>
+                        <p>Once a day, Focus sends one anonymous count with an ID that changes every month.
+                            You can turn it off in Settings.
+                            <a href="https://digitalhabits.org/privacy-policy#usage-count" target="_blank" rel="noopener noreferrer" class="eula-link">Privacy Policy</a></p>
+                    </details>
+
+                    <hr class="eula-divider" />
+
+                    <div class="eula-checkbox-row eula-custom-checkbox">
+                        <input type="checkbox" id="eula-agree-checkbox">
+                        <label for="eula-agree-checkbox" class="eula-checkbox-label">
+                            <span class="eula-checkbox-text">
+                                I agree to the
+                                <a href="https://digitalhabits.org/eula" target="_blank" rel="noopener noreferrer" class="eula-link">End User License Agreement</a>
+                            </span>
+                        </label>
+                    </div>
+                    <button type="button" id="eula-continue-btn" class="btn-primary" disabled>Continue</button>
                 </div>
-                <p class="eula-note">
-                    <em>We collect no personal data. In Chrome, Edge and Safari, Focus sends one anonymous
-                    count a day, with an ID that changes every month, so we know how many people use it.
-                    You can turn this off in Settings. See our
-                    <a href="https://digitalhabits.org/privacy-policy" target="_blank" rel="noopener noreferrer"
-                        class="eula-link">Privacy Policy</a>.</em>
-                </p>
-                <button type="button" id="eula-continue-btn" class="btn-primary" disabled>Continue</button>
             </div>
 
             <div class="eula-footer">
                 <p class="assurance-copy">
-                    Built by <a href="https://digitalhabits.org" target="_blank" rel="noopener noreferrer" class="eula-link">Centre for Digital Habits</a>, a not-for-profit creating open-source digital focus tools &amp; training. In collaboration with researchers at the University of Oxford and University of Maastricht.
-                </p>
-                <p class="assurance-copy assurance-copy-secondary">
+                    <a href="https://digitalhabits.org" target="_blank" rel="noopener noreferrer" class="eula-link">Centre for Digital Habits</a> is a not-for-profit creating digital focus tools in collaboration with researchers at the universities of Oxford, Copenhagen and Maastricht.
                     <a href="https://github.com/digitalhabits/dh-focus" target="_blank" rel="noopener noreferrer" class="eula-link">View the source code on GitHub</a>.
                 </p>
             </div>

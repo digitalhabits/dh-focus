@@ -267,6 +267,14 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.classList.add('eula-gate-active');
             document.documentElement.classList.add('eula-gate-active');
             eulaOverlay.style.display = 'block';
+            // Firefox sends no usage count (see background.js), so it gets
+            // no "we count" line and no "How we count" details.
+            if (chrome.runtime.getURL('').startsWith('moz-extension://')) {
+                const lead = document.getElementById('eula-privacy-lead');
+                if (lead) lead.textContent = 'We collect no personal data, and Focus sends nothing to us.';
+                const details = document.getElementById('eula-how-we-count');
+                if (details) details.style.display = 'none';
+            }
             const checkbox = document.getElementById('eula-agree-checkbox');
             const continueBtn = document.getElementById('eula-continue-btn');
             if (checkbox) checkbox.checked = false;

@@ -3316,8 +3316,13 @@ body.eula-gate-active {
     box-sizing: border-box;
 }
 
+/* The popup root clips overflow (see html above), so the welcome screen
+   scrolls inside itself when it is taller than the popup. */
 .eula-overlay {
     position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
     width: 100%;
     background-color: var(--bg-primary);
     z-index: 10001;
@@ -3342,14 +3347,126 @@ body.eula-gate-active {
     box-sizing: border-box;
 }
 
+/* The welcome screen fills the popup: no card of its own, just a dark
+   cream header band over the popup's canvas. */
+.eula-overlay .screen-container.eula-screen-container {
+    padding: 0;
+}
+
 .eula-card {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-sm);
-    padding: 20px 20px 18px;
-    margin: 8px 0 0;
+    margin: 0;
     text-align: left;
+}
+
+.eula-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    background-color: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.eula-header-logo {
+    display: block;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    object-fit: contain;
+}
+
+.eula-header-copy {
+    min-width: 0;
+}
+
+/* Title and subtitle each stay on one line at the 310px popup width. */
+.eula-header-title {
+    margin: 0;
+    white-space: nowrap;
+    font-family: var(--font-heading);
+    font-size: 1.3em;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+    color: var(--text-primary);
+}
+
+.eula-header-subtitle {
+    margin: 3px 0 0;
+    white-space: nowrap;
+    font-size: 0.85em;
+    line-height: 1.3;
+    color: var(--text-muted);
+}
+
+.eula-body {
+    padding: 20px 20px 18px;
+}
+
+.eula-body-title {
+    margin: 0 0 6px;
+    font-family: var(--font-heading);
+    font-size: 1.2em;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--text-primary);
+}
+
+.eula-privacy-lead {
+    margin: 0;
+    font-size: 1.05em;
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+
+.eula-details {
+    margin-top: 8px;
+    font-size: 0.98em;
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+.eula-details summary {
+    display: inline-block;
+    cursor: pointer;
+    color: var(--accent-primary);
+    list-style: none;
+}
+
+.eula-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.eula-details summary::after {
+    content: '\203A';
+    display: inline-block;
+    margin-left: 4px;
+    transition: transform 0.15s ease;
+}
+
+.eula-details[open] summary::after {
+    transform: rotate(90deg);
+}
+
+.eula-details summary:hover {
+    color: var(--accent-hover);
+}
+
+.eula-details summary:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+    border-radius: 3px;
+}
+
+.eula-details p {
+    margin: 6px 0 0;
+}
+
+.eula-divider {
+    height: 0;
+    margin: 16px 0;
+    border: none;
+    border-top: 1px solid var(--border-color);
 }
 
 /* EULA: custom checkbox (same pattern as .hide-checkboxes; checkmark = agree, 22px to match EULA) */
@@ -3469,79 +3586,22 @@ body.eula-gate-active {
     text-decoration: none;
 }
 
-.eula-note {
-    margin: 14px 0 0;
-    font-size: 1.05em;
-    line-height: 1.55;
-    color: var(--text-muted);
-}
-
-.eula-note .eula-link {
-    /* inherits italic + muted from <em> parent */
-    font-weight: 400;
-}
-
 .eula-card .btn-primary {
     margin-top: 16px;
 }
 
 .eula-card .btn-primary:disabled {
-    opacity: 0.45;
+    color: var(--text-muted);
+    background-color: transparent;
+    border: 1px solid var(--border-color);
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
 }
 
-.eula-overlay .top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 16px 12px;
-}
-
-.eula-overlay .top-bar-no-border {
-    border-bottom: none;
-    padding: 0 0 8px;
-}
-
-.eula-overlay .top-title {
-    margin: 0;
-    font-family: var(--font-heading);
-    font-size: 1.4em;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-    line-height: 1.15;
-    color: var(--text-primary);
-}
-
-.eula-overlay .top-title-group {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.eula-overlay .top-logo {
-    display: block;
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
-    object-fit: contain;
-}
-
-.eula-overlay .top-title-block {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.eula-overlay .top-title-group-screen {
-    margin-bottom: 10px;
-}
-
 .eula-overlay .eula-footer {
     margin: auto 0 0 0;
-    padding-top: 24px;
+    padding: 16px 20px 18px;
     width: 100%;
     max-width: 34rem;
     text-align: center;
@@ -3581,7 +3641,7 @@ body.eula-gate-active {
     font-family: var(--font-body);
     color: var(--btn-primary-text);
     background-color: var(--btn-primary-bg);
-    border: none;
+    border: 1px solid transparent;
     border-radius: var(--radius-sm);
     cursor: pointer;
     box-shadow: var(--shadow-sm);
