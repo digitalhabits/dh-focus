@@ -167,12 +167,66 @@
         return document.body || document.documentElement;
     }
 
-    function ensureMounted(el) {
+    /*
+     * Our in-page UI (picker bar, highlight, selector tip, delay screen) lives
+     * in one transparent container in the browser's top layer, shown as a
+     * manual popover. The top layer is painted outside the page's own
+     * rendering, so the greyscale filter on <html> does not reach it, and no
+     * site element can sit above it. Browsers without popovers (Chrome < 114,
+     * Safari < 17, Firefox < 125) mount the UI in <body> as before.
+     */
+    const SUPPORTS_TOP_LAYER = typeof HTMLElement !== 'undefined' &&
+        typeof HTMLElement.prototype.showPopover === 'function';
+    const UI_LAYER_ID = 'redd-focus-ui-layer';
+    let uiLayer = null;
+
+    function getUiLayer() {
+        if (!SUPPORTS_TOP_LAYER) return null;
+        if (!uiLayer) {
+            uiLayer = document.createElement('div');
+            uiLayer.id = UI_LAYER_ID;
+            uiLayer.setAttribute('popover', 'manual');
+            // Undo the browser's popover box (centred, bordered, opaque) with
+            // inline !important, which page stylesheets cannot override.
+            const reset = {
+                position: 'fixed', inset: '0', width: '100vw', height: '100vh',
+                'max-width': 'none', 'max-height': 'none', margin: '0', padding: '0',
+                border: '0', background: 'transparent', overflow: 'visible',
+                'pointer-events': 'none', color: 'inherit'
+            };
+            Object.keys(reset).forEach(function (prop) {
+                uiLayer.style.setProperty(prop, reset[prop], 'important');
+            });
+        }
         const parent = getMountParent();
-        if (!parent || !el) return false;
+        if (!parent) return null;
+        if (uiLayer.parentNode !== parent) {
+            parent.appendChild(uiLayer);
+        }
+        // Moving a popover in the DOM closes it, so show it again if needed.
+        try {
+            if (!uiLayer.matches(':popover-open')) uiLayer.showPopover();
+        } catch (e) {
+            return null;
+        }
+        return uiLayer;
+    }
+
+    /** Close and remove the top-layer container once nothing is in it. */
+    function releaseUiLayerIfEmpty() {
+        if (!uiLayer || uiLayer.firstElementChild) return;
+        try { uiLayer.hidePopover(); } catch (e) { /* already closed */ }
+        uiLayer.remove();
+    }
+
+    function ensureMounted(el) {
+        if (!el) return false;
+        const parent = getUiLayer() || getMountParent();
+        if (!parent) return false;
         if (el.parentNode !== parent) {
             parent.appendChild(el);
         }
+        refreshGrayscaleFilter();
         return true;
     }
 
@@ -200,6 +254,7 @@
             selectionCaptureLayer.style.zIndex = '2147483645';
             selectionCaptureLayer.style.background = 'transparent';
             selectionCaptureLayer.style.cursor = 'crosshair';
+            selectionCaptureLayer.style.pointerEvents = 'auto';
             selectionCaptureLayer.style.touchAction = 'auto';
         }
         return ensureMounted(selectionCaptureLayer);
@@ -279,6 +334,7 @@
             feedbackContainer.style.alignItems = 'center';
             feedbackContainer.style.gap = '8px';
             feedbackContainer.style.cursor = 'move';
+            feedbackContainer.style.pointerEvents = 'auto';
             feedbackContainer.style.userSelect = 'none';
             feedbackContainer.style.minWidth = '230px';
             feedbackContainer.style.maxWidth = '400px';
@@ -587,6 +643,8 @@
         const tempStyle = document.getElementById(highlightStyleId);
         if (tempStyle) tempStyle.remove();
         feedbackContainer = highlightOverlay = selectionCaptureLayer = selectorDisplay = currentHighlightedElement = null;
+        releaseUiLayerIfEmpty();
+        refreshGrayscaleFilter();
         // Keep sessionHiddenSelectors so session rules persist until refresh
 
         // Update storage to reflect that selection has stopped
@@ -629,8 +687,11 @@
         }
         if (highlightOverlay) {
             const rect = el.getBoundingClientRect();
-            highlightOverlay.style.top = `${rect.top + window.scrollY}px`;
-            highlightOverlay.style.left = `${rect.left + window.scrollX}px`;
+            // In the fixed top-layer container, coordinates are the viewport's;
+            // in <body>, the page's.
+            const inLayer = highlightOverlay.parentNode === uiLayer;
+            highlightOverlay.style.top = `${rect.top + (inLayer ? 0 : window.scrollY)}px`;
+            highlightOverlay.style.left = `${rect.left + (inLayer ? 0 : window.scrollX)}px`;
             highlightOverlay.style.width = `${rect.width}px`;
             highlightOverlay.style.height = `${rect.height}px`;
             highlightOverlay.style.display = 'block';
@@ -705,7 +766,7 @@
     }
 
     const GRAYSCALE_STYLE_ID = 'siteGrayscaleStyle';
-    const GRAYSCALE_OVERLAY_ID = 'redd-focus-grayscale-overlay';
+    let grayscaleOn = false;
 
     function ensureGrayscaleCssInjected() {
         createStyleElement(GRAYSCALE_STYLE_ID, `
@@ -713,58 +774,38 @@
                 -webkit-filter: grayscale(100%) !important;
                 filter: grayscale(100%) !important;
             }
-            #${GRAYSCALE_OVERLAY_ID} {
-                position: fixed !important;
-                top: 0 !important;
-                left: 0 !important;
-                width: 100vw !important;
-                height: 100vh !important;
-                height: 100dvh !important;
-                pointer-events: none !important;
-                z-index: 2147483640 !important;
-                backdrop-filter: grayscale(100%) !important;
-                -webkit-backdrop-filter: grayscale(100%) !important;
-                background: transparent !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                border: none !important;
-            }
         `);
     }
 
     /**
-     * Greyscale is a fixed overlay whose backdrop-filter greys everything
-     * behind it. Our own in-page UI (the picker bar with Done, the delay
-     * screen) sits above it at a higher z-index, so it keeps its colour.
+     * Greyscale is a filter on <html>. It greys the whole page, including
+     * sites' own top-most widgets, and it is cheap.
      *
-     * A filter on <html> would grey that UI too, because a filter cannot
-     * exclude descendants. It is used only until <body> exists and the
-     * overlay can mount, so the page does not flash in colour on load.
+     * Our own UI must stay in colour. In Chrome, Edge and Safari it does, as
+     * it lives in the top layer (see getUiLayer), which the filter does not
+     * reach. Firefox applies the filter to the top layer too, and older
+     * browsers have no top layer, so there greyscale pauses while our UI is
+     * on screen (picking, the delay screen) and returns when it closes.
      */
+    const TOP_LAYER_ESCAPES_FILTER = SUPPORTS_TOP_LAYER && !/Firefox\//.test(navigator.userAgent);
+
+    function ourUiIsShowing() {
+        return !!(feedbackContainer || selectionCaptureLayer || highlightOverlay || selectorDisplay ||
+            // ACCESS_DELAY_OVERLAY_ID is declared further down; this can run first.
+            document.getElementById('redd-focus-access-delay'));
+    }
+
+    function refreshGrayscaleFilter() {
+        const root = document.documentElement;
+        if (!root) return;
+        const paused = !TOP_LAYER_ESCAPES_FILTER && ourUiIsShowing();
+        root.classList.toggle('redd-focus-grayscale', grayscaleOn && !paused);
+    }
+
     function applyGrayscaleStyle(enabled) {
         ensureGrayscaleCssInjected();
-        document.documentElement.classList.toggle('redd-focus-grayscale', !!enabled && !document.body);
-
-        const mountOverlay = function () {
-            let overlay = document.getElementById(GRAYSCALE_OVERLAY_ID);
-            if (enabled) {
-                if (!overlay) {
-                    overlay = document.createElement('div');
-                    overlay.id = GRAYSCALE_OVERLAY_ID;
-                    overlay.setAttribute('aria-hidden', 'true');
-                    (document.body || document.documentElement).appendChild(overlay);
-                }
-            } else if (overlay) {
-                overlay.remove();
-            }
-            document.documentElement.classList.remove('redd-focus-grayscale');
-        };
-
-        if (enabled && !document.body) {
-            document.addEventListener('DOMContentLoaded', mountOverlay, { once: true });
-        } else {
-            mountOverlay();
-        }
+        grayscaleOn = !!enabled;
+        refreshGrayscaleFilter();
     }
 
     const ACCESS_DELAY_STYLE_ID = 'reddFocusAccessDelayStyle';
@@ -785,6 +826,7 @@
                 height: 100vh !important;
                 height: 100dvh !important;
                 z-index: 2147483647 !important;
+                pointer-events: auto !important;
                 display: flex !important;
                 flex-direction: column !important;
                 align-items: center !important;
@@ -846,6 +888,8 @@
         document.documentElement.classList.remove('redd-focus-access-delaying');
         const overlay = document.getElementById(ACCESS_DELAY_OVERLAY_ID);
         if (overlay) overlay.remove();
+        releaseUiLayerIfEmpty();
+        refreshGrayscaleFilter();
     }
 
     function startAccessDelayGate(seconds, message) {
@@ -883,7 +927,8 @@
 
                 overlay.appendChild(img);
                 overlay.appendChild(timeEl);
-                (document.body || document.documentElement).appendChild(overlay);
+                (getUiLayer() || document.body || document.documentElement).appendChild(overlay);
+                refreshGrayscaleFilter();
                 requestAnimationFrame(function () {
                     overlay.classList.add('show');
                 });
@@ -906,9 +951,15 @@
             document.addEventListener('DOMContentLoaded', function () {
                 if (!accessDelayActive) return;
                 const existing = document.getElementById(ACCESS_DELAY_OVERLAY_ID);
-                if (existing && existing.parentElement !== document.body && document.body) {
-                    document.body.appendChild(existing);
-                } else if (!existing) {
+                if (existing) {
+                    // Move the top-layer container (or the screen itself) into <body>.
+                    const layer = getUiLayer();
+                    if (layer) {
+                        if (existing.parentNode !== layer) layer.appendChild(existing);
+                    } else if (existing.parentElement !== document.body && document.body) {
+                        document.body.appendChild(existing);
+                    }
+                } else {
                     mountGate();
                 }
             }, { once: true });
