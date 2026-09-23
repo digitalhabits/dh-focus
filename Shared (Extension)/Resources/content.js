@@ -631,10 +631,23 @@
         document.addEventListener('keydown', handleKeydown, { capture: true });
         window.addEventListener('scroll', followHighlightOnScroll, { capture: true, passive: true });
 
-        // Update storage to reflect that selection has started
-        if (currentSiteIdentifier) {
-            chrome.storage.sync.set({ [`${currentSiteIdentifier}SelectionActive`]: true });
-        }
+        notifySelectionState();
+    }
+
+    /*
+     * Pick mode belongs to this tab alone: the popup starts and stops it with
+     * a message, and the state lives in `isSelecting`. It used to be a key in
+     * storage.sync, which put every tab on the site, and the user's other
+     * computers, into pick mode at once.
+     */
+    function notifySelectionState() {
+        try {
+            chrome.runtime.sendMessage({
+                type: 'selectionStateChanged',
+                siteIdentifier: currentSiteIdentifier,
+                active: isSelecting
+            }, function () { void chrome.runtime.lastError; });
+        } catch (e) { /* extension reloaded; nothing to tell */ }
     }
 
     function stopSelecting(cancelled = false) {
@@ -659,10 +672,7 @@
         refreshGrayscaleFilter();
         // Keep sessionHiddenSelectors so session rules persist until refresh
 
-        // Update storage to reflect that selection has stopped
-        if (currentSiteIdentifier) {
-            chrome.storage.sync.set({ [`${currentSiteIdentifier}SelectionActive`]: false });
-        }
+        notifySelectionState();
     }
 
     function handleKeydown(event) {
@@ -1261,16 +1271,6 @@
                 }
             });
 
-            // Check for selection state changes
-            const selectionKey = `${currentSiteIdentifier}SelectionActive`;
-            chrome.storage.sync.get(selectionKey, function (result) {
-                const shouldBeSelecting = result[selectionKey] === true;
-                if (shouldBeSelecting && !isSelecting) {
-                    startSelecting();
-                } else if (!shouldBeSelecting && isSelecting) {
-                    stopSelecting(false);
-                }
-            });
 
             // Check grayscale setting
             const grayscaleStatusKey = `${currentSiteIdentifier}GrayscaleStatus`;
@@ -1303,9 +1303,8 @@
             // Check custom element changes
             if (currentSiteIdentifier) {
                 const customStorageKey = `${currentSiteIdentifier}CustomHiddenElements`;
-                const selectionKey = `${currentSiteIdentifier}SelectionActive`;
                 const grayscaleStatusKey = `${currentSiteIdentifier}GrayscaleStatus`;
-                if (changes[customStorageKey] || changes[selectionKey] || changes[grayscaleStatusKey]) {
+                if (changes[customStorageKey] || changes[grayscaleStatusKey]) {
                     hasRelevantChanges = true;
                 }
             }
@@ -1343,6 +1342,12 @@
         } else if (message.type === 'setGrayscale') {
             applyGrayscaleStyle(message.enabled === true);
             sendResponse({ success: true });
+        } else if (message.type === 'setSelectionActive') {
+            if (message.active === true) startSelecting();
+            else stopSelecting(false);
+            sendResponse({ active: isSelecting });
+        } else if (message.type === 'getSelectionState') {
+            sendResponse({ active: isSelecting });
         } else if (message.type === 'getSessionOverrides') {
             const customKey = `${currentSiteIdentifier}CustomHiddenElements`;
             chrome.storage.sync.get(customKey, function (result) {
