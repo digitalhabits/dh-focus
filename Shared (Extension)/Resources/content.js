@@ -721,7 +721,7 @@
                 height: 100vh !important;
                 height: 100dvh !important;
                 pointer-events: none !important;
-                z-index: 2147483646 !important;
+                z-index: 2147483640 !important;
                 backdrop-filter: grayscale(100%) !important;
                 -webkit-backdrop-filter: grayscale(100%) !important;
                 background: transparent !important;
@@ -732,9 +732,18 @@
         `);
     }
 
+    /**
+     * Greyscale is a fixed overlay whose backdrop-filter greys everything
+     * behind it. Our own in-page UI (the picker bar with Done, the delay
+     * screen) sits above it at a higher z-index, so it keeps its colour.
+     *
+     * A filter on <html> would grey that UI too, because a filter cannot
+     * exclude descendants. It is used only until <body> exists and the
+     * overlay can mount, so the page does not flash in colour on load.
+     */
     function applyGrayscaleStyle(enabled) {
         ensureGrayscaleCssInjected();
-        document.documentElement.classList.toggle('redd-focus-grayscale', !!enabled);
+        document.documentElement.classList.toggle('redd-focus-grayscale', !!enabled && !document.body);
 
         const mountOverlay = function () {
             let overlay = document.getElementById(GRAYSCALE_OVERLAY_ID);
@@ -748,6 +757,7 @@
             } else if (overlay) {
                 overlay.remove();
             }
+            document.documentElement.classList.remove('redd-focus-grayscale');
         };
 
         if (enabled && !document.body) {
