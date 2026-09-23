@@ -1759,8 +1759,11 @@ p.how-to-description {
     color: var(--text-subtle);
 }
 
+/* Inline in a sentence: no side padding, and the 1px focus border is
+   pulled back so "in Settings." spaces like ordinary text. */
 .lock-start-settings-link {
-    padding: 2px 4px;
+    padding: 2px 0;
+    margin: 0 -1px;
     border: 1px solid transparent;
     border-radius: 6px;
     background: none;
