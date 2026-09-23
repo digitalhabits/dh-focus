@@ -1189,7 +1189,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (addButton) {
                     isSelectionModeActive = false;
                     addButton.classList.remove('active');
-                    addButton.textContent = 'Hide element';
+                    addButton.textContent = 'Pick…';
                 }
             }
         });
@@ -1585,20 +1585,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             wrapper.appendChild(row);
 
-            const customElementsList = anchorContainer.querySelector('.custom-elements');
-            if (customElementsList) {
-                customElementsList.insertAdjacentElement('afterend', wrapper);
-            } else {
-                const controls = anchorContainer.querySelector('.custom-elements-controls');
-                if (controls) {
-                    controls.insertAdjacentElement('afterend', wrapper);
-                } else {
-                    anchorContainer.prepend(wrapper);
-                }
-            }
+            // Greyscale, Delay and Redirect open the section, as a row of cards.
+            anchorContainer.prepend(wrapper);
 
             setupAccessDelayToggle(siteIdentifier, wrapper);
             setupRedirectToggle(siteIdentifier, wrapper);
+            buildFeatureCards(wrapper);
 
             const toggle = document.getElementById('grayscaleToggle');
             if (!toggle) return;
@@ -1624,6 +1616,201 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 updateLockProtectedUI();
             });
+        }
+
+        const HOURGLASS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>';
+
+        /**
+         * Greyscale, Delay and Redirect as three cards. The cards drive the
+         * same checkboxes and inputs as before (their rows stay in the DOM,
+         * visually hidden), so saving, locking and the redirect-loop check are
+         * unchanged.
+         *
+         * Greyscale toggles on click. Delay and Redirect open an editor panel
+         * below the cards: clicking an off card turns it on and opens the
+         * panel; clicking an on card opens the panel to edit it. The panel's
+         * "Turn off" unticks the checkbox; "Done" closes it.
+         */
+        function buildFeatureCards(wrapper) {
+            const grayscaleToggle = document.getElementById('grayscaleToggle');
+            const delayToggle = document.getElementById('accessDelayToggle');
+            const redirectToggle = document.getElementById('redirectToggle');
+            const secondsInput = document.getElementById('accessDelaySeconds');
+            const redirectDetails = document.getElementById('redirect-details');
+            const urlInput = document.getElementById('redirectUrl');
+            if (!grayscaleToggle || !delayToggle || !redirectToggle) return;
+
+            ['grayscale-toggle-row', 'access-delay-toggle-row', 'redirect-toggle-row'].forEach(function (id) {
+                const row = document.getElementById(id);
+                if (row) row.classList.add('feature-row');
+            });
+
+            const grid = document.createElement('div');
+            grid.className = 'feature-cards';
+            wrapper.prepend(grid);
+
+            const panels = document.createElement('div');
+            panels.className = 'feature-panels';
+            grid.insertAdjacentElement('afterend', panels);
+
+            let openFeature = null;
+
+            function makeCard(feature, name, iconHtml) {
+                const card = document.createElement('button');
+                card.type = 'button';
+                card.className = 'feature-card';
+                card.dataset.feature = feature;
+                card.innerHTML = `
+                    <span class="feature-card-name">${name}</span>
+                    <span class="feature-card-foot">
+                        <span class="feature-card-state">Off</span>
+                        <span class="feature-tile">${iconHtml}</span>
+                    </span>`;
+                grid.appendChild(card);
+                return card;
+            }
+
+            const cards = {
+                grayscale: makeCard('grayscale', 'Greyscale', '<img src="images/feature-greyscale.svg" alt="">'),
+                delay: makeCard('delay', 'Delay', HOURGLASS_ICON),
+                redirect: makeCard('redirect', 'Redirect', '<img src="images/feature-redirect.svg" alt="">')
+            };
+            const toggles = { grayscale: grayscaleToggle, delay: delayToggle, redirect: redirectToggle };
+
+            function panelFooter(feature) {
+                const footer = document.createElement('div');
+                footer.className = 'feature-panel-actions';
+                const off = document.createElement('button');
+                off.type = 'button';
+                off.className = 'feature-panel-off';
+                off.textContent = 'Turn off';
+                off.addEventListener('click', function () {
+                    setToggle(toggles[feature], false);
+                    if (!toggles[feature].checked) openPanel(null);
+                });
+                const done = document.createElement('button');
+                done.type = 'button';
+                done.className = 'feature-panel-done';
+                done.textContent = 'Done';
+                done.addEventListener('click', function () { openPanel(null); });
+                footer.appendChild(off);
+                footer.appendChild(done);
+                return footer;
+            }
+
+            const delayPanel = document.createElement('div');
+            delayPanel.className = 'feature-panel';
+            delayPanel.hidden = true;
+            const delayLine = document.createElement('div');
+            delayLine.className = 'feature-panel-line';
+            delayLine.appendChild(document.createTextNode('Delay by'));
+            if (secondsInput) delayLine.appendChild(secondsInput);
+            delayLine.appendChild(document.createTextNode('sec'));
+            delayPanel.appendChild(delayLine);
+            delayPanel.appendChild(panelFooter('delay'));
+            panels.appendChild(delayPanel);
+            // The old "by N seconds" line is now the panel.
+            const oldSuffix = document.getElementById('access-delay-suffix');
+            if (oldSuffix) oldSuffix.remove();
+
+            const redirectPanel = document.createElement('div');
+            redirectPanel.className = 'feature-panel';
+            redirectPanel.hidden = true;
+            const redirectTitle = document.createElement('label');
+            redirectTitle.className = 'feature-panel-title';
+            redirectTitle.htmlFor = 'redirectUrl';
+            redirectTitle.textContent = 'Redirect to';
+            redirectPanel.appendChild(redirectTitle);
+            if (redirectDetails) redirectPanel.appendChild(redirectDetails);
+            redirectPanel.appendChild(panelFooter('redirect'));
+            panels.appendChild(redirectPanel);
+
+            const panelFor = { delay: delayPanel, redirect: redirectPanel };
+
+            function openPanel(feature) {
+                openFeature = feature;
+                Object.keys(panelFor).forEach(function (key) {
+                    panelFor[key].hidden = key !== feature;
+                    cards[key].classList.toggle('is-editing', key === feature);
+                    cards[key].setAttribute('aria-expanded', key === feature ? 'true' : 'false');
+                });
+                if (feature === 'redirect' && urlInput && !urlInput.value) urlInput.focus();
+                if (feature === 'delay' && secondsInput) secondsInput.focus();
+            }
+
+            function setToggle(toggle, value) {
+                if (toggle.checked === value) return;
+                toggle.checked = value;
+                toggle.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+
+            function shortDestination(url) {
+                return String(url || '').replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+            }
+
+            function sync() {
+                const lockedRows = {
+                    grayscale: document.getElementById('grayscale-toggle-row'),
+                    delay: document.getElementById('access-delay-toggle-row'),
+                    redirect: document.getElementById('redirect-toggle-row')
+                };
+                Object.keys(cards).forEach(function (key) {
+                    const on = toggles[key].checked;
+                    const card = cards[key];
+                    card.classList.toggle('is-on', on);
+                    card.setAttribute('aria-pressed', on ? 'true' : 'false');
+                    const row = lockedRows[key];
+                    card.classList.toggle('lock-protected', !!(row && row.classList.contains('lock-protected')));
+                    let state = 'Off';
+                    if (on && key === 'grayscale') state = 'On';
+                    if (on && key === 'delay') state = `${secondsInput ? secondsInput.value : 10} sec`;
+                    if (on && key === 'redirect') {
+                        const dest = urlInput ? shortDestination(urlInput.value.trim()) : '';
+                        state = dest || 'Set page';
+                    }
+                    const stateEl = card.querySelector('.feature-card-state');
+                    stateEl.textContent = state;
+                    stateEl.title = state;
+                });
+                if (openFeature && !toggles[openFeature].checked) openPanel(null);
+            }
+
+            // Code elsewhere sets .checked and .value directly (load, reset,
+            // lock). Watching the property setters keeps the cards in step
+            // with every one of those paths, not only with user clicks.
+            function watch(el, prop) {
+                if (!el) return;
+                const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, prop);
+                Object.defineProperty(el, prop, {
+                    configurable: true,
+                    get: function () { return desc.get.call(this); },
+                    set: function (v) { desc.set.call(this, v); sync(); }
+                });
+            }
+            [grayscaleToggle, delayToggle, redirectToggle].forEach(function (t) {
+                watch(t, 'checked');
+                t.addEventListener('change', sync);
+            });
+            watch(secondsInput, 'value');
+            watch(urlInput, 'value');
+            if (secondsInput) secondsInput.addEventListener('input', sync);
+            if (urlInput) urlInput.addEventListener('input', sync);
+
+            cards.grayscale.addEventListener('click', function () {
+                setToggle(grayscaleToggle, !grayscaleToggle.checked);
+            });
+            ['delay', 'redirect'].forEach(function (key) {
+                cards[key].addEventListener('click', function () {
+                    if (!toggles[key].checked) {
+                        setToggle(toggles[key], true);
+                        if (toggles[key].checked) openPanel(key);
+                        return;
+                    }
+                    openPanel(openFeature === key ? null : key);
+                });
+            });
+
+            sync();
         }
 
         function getPopupDisplayHost() {
@@ -2208,87 +2395,44 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        const CUSTOM_SECTION_CACHE_KEY = 'reddFocusCustomSectionExpanded';
-
+        /**
+         * The Custom section is no longer collapsible and has no heading:
+         * the feature cards open it, then a divider, then "Hide distractions"
+         * with its Pick… button, then the user's picks under "Your picks".
+         */
         function setupCustomSectionCollapse(siteIdentifier) {
-            const hasPreconfiguredOptions = !!currentPlatform || platformsWeTarget.includes(siteIdentifier);
-            const customSectionCacheKey = `${CUSTOM_SECTION_CACHE_KEY}:${siteIdentifier || 'generic'}`;
             const group = currentPlatform
                 ? document.querySelector('.dropdown.' + currentPlatform + ' > .toggle-group')
                 : document.querySelector('#generic-site-options > .toggle-group');
-            if (!group || group.dataset.customCollapseBound === 'true') return;
+            if (!group || group.dataset.customLayoutBound === 'true') return;
+            group.dataset.customLayoutBound = 'true';
+            group.classList.add('custom-section');
 
             const heading = Array.prototype.find.call(group.children, function (el) {
                 return el.tagName === 'H2' && el.textContent.trim().toLowerCase() === 'custom';
             });
-            if (!heading) return;
+            if (heading) heading.remove();
 
-            group.dataset.customCollapseBound = 'true';
-            group.classList.add('custom-section');
+            const controls = group.querySelector('.custom-elements-controls');
+            if (controls) {
+                const divider = document.createElement('hr');
+                divider.className = 'custom-section-divider';
+                controls.insertAdjacentElement('beforebegin', divider);
 
-            const headerBtn = document.createElement('button');
-            headerBtn.type = 'button';
-            headerBtn.className = 'custom-section-toggle';
-            headerBtn.setAttribute('aria-controls', 'custom-section-body');
-
-            const title = document.createElement('h2');
-            title.textContent = 'Custom';
-            headerBtn.appendChild(title);
-
-            const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            chevron.setAttribute('class', 'custom-section-chevron');
-            chevron.setAttribute('viewBox', '0 0 24 24');
-            chevron.setAttribute('fill', 'none');
-            chevron.setAttribute('stroke', 'currentColor');
-            chevron.setAttribute('stroke-width', '2.5');
-            chevron.setAttribute('stroke-linecap', 'round');
-            chevron.setAttribute('stroke-linejoin', 'round');
-            chevron.setAttribute('aria-hidden', 'true');
-            const chevronPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            chevronPath.setAttribute('d', 'm9 18 6-6-6-6');
-            chevron.appendChild(chevronPath);
-            headerBtn.appendChild(chevron);
-
-            heading.replaceWith(headerBtn);
-
-            const body = document.createElement('div');
-            body.id = 'custom-section-body';
-            body.className = 'custom-section-body';
-            while (headerBtn.nextSibling) {
-                body.appendChild(headerBtn.nextSibling);
-            }
-            group.appendChild(body);
-
-            function writeCachedExpanded(isExpanded) {
-                chrome.storage.local.set({ [customSectionCacheKey]: isExpanded ? '1' : '0' });
+                const title = document.createElement('div');
+                title.className = 'hide-distractions-title';
+                title.textContent = 'Hide distractions';
+                controls.prepend(title);
             }
 
-            function applyExpanded(isExpanded, persist) {
-                group.classList.toggle('is-expanded', isExpanded);
-                group.classList.toggle('is-collapsed', !isExpanded);
-                headerBtn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-                body.hidden = !isExpanded;
-                if (persist) writeCachedExpanded(isExpanded);
-                setupPopupTabOrder();
+            const list = group.querySelector('.custom-elements');
+            if (list) {
+                const picksHeading = document.createElement('h2');
+                picksHeading.className = 'your-picks-heading';
+                picksHeading.textContent = 'Your picks';
+                list.insertAdjacentElement('beforebegin', picksHeading);
             }
-
-            headerBtn.addEventListener('click', function () {
-                applyExpanded(!group.classList.contains('is-expanded'), true);
-            });
-
-            const defaultExpanded = !hasPreconfiguredOptions;
-            chrome.storage.local.get(customSectionCacheKey, function (result) {
-                const cached = result && result[customSectionCacheKey];
-                if (cached === '1') {
-                    applyExpanded(true, false);
-                    return;
-                }
-                if (cached === '0') {
-                    applyExpanded(false, false);
-                    return;
-                }
-                applyExpanded(defaultExpanded, false);
-            });
+            setupPopupTabOrder();
         }
 
         function addCustomSelector(siteIdentifier, name, selector) {
@@ -2337,7 +2481,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (isSelectionModeActive) {
                         isSelectionModeActive = false;
                         addButton.classList.remove('active');
-                        addButton.textContent = 'Hide element';
+                        addButton.textContent = 'Pick…';
                         chrome.storage.sync.set({ [`${siteIdentifier}SelectionActive`]: false });
                     } else {
                         isSelectionModeActive = true;
@@ -2821,7 +2965,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             addButton.textContent = 'Click to hide';
                         } else {
                             addButton.classList.remove('active');
-                            addButton.textContent = 'Hide element';
+                            addButton.textContent = 'Pick…';
                         }
                     }
                 }

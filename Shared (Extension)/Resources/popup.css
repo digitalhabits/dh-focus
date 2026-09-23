@@ -2965,9 +2965,8 @@ footer .friction-customisation {
 .grayscale-controls .a-toggle.access-delay-toggle.lock-protected .access-delay-seconds-input:disabled {
     opacity: 0.55;
     cursor: not-allowed;
-}
-
-.grayscale-controls .a-toggle.redirect-toggle .redirect-details {
+}.grayscale-controls .a-toggle.redirect-toggle .redirect-details,
+.feature-panel .redirect-details {
     display: block;
     margin: var(--redirect-details-gap) 0 0 0;
     padding: 0;
@@ -3054,13 +3053,11 @@ footer .friction-customisation {
     outline: none;
     border-color: var(--btn-custom-hide-focus-border);
     box-shadow: var(--btn-custom-hide-focus-ring);
-}
-
-.grayscale-controls .a-toggle.redirect-toggle .redirect-details[hidden] {
+}.grayscale-controls .a-toggle.redirect-toggle .redirect-details[hidden],
+.feature-panel .redirect-details[hidden] {
     display: none;
-}
-
-.grayscale-controls .a-toggle.redirect-toggle .redirect-url-input {
+}.grayscale-controls .a-toggle.redirect-toggle .redirect-url-input,
+.feature-panel .redirect-url-input {
     box-sizing: border-box;
     display: block;
     width: 100%;
@@ -3109,18 +3106,15 @@ footer .friction-customisation {
     border-radius: 4px;
     background-color: var(--bg-input);
     box-shadow: inset 0 0 0 1px var(--border-focus);
-}
-
-.grayscale-controls .a-toggle.redirect-toggle .redirect-url-input::placeholder {
+}.grayscale-controls .a-toggle.redirect-toggle .redirect-url-input::placeholder,
+.feature-panel .redirect-url-input::placeholder {
     color: var(--text-placeholder);
     opacity: 1;
-}
-
-.grayscale-controls .a-toggle.redirect-toggle .redirect-url-input:hover:not(:focus):not(:disabled):not([readonly]) {
+}.grayscale-controls .a-toggle.redirect-toggle .redirect-url-input:hover:not(:focus):not(:disabled):not([readonly]),
+.feature-panel .redirect-url-input:hover:not(:focus):not(:disabled):not([readonly]) {
     border-color: var(--border-hover);
-}
-
-.grayscale-controls .a-toggle.redirect-toggle .redirect-url-input:focus {
+}.grayscale-controls .a-toggle.redirect-toggle .redirect-url-input:focus,
+.feature-panel .redirect-url-input:focus {
     outline: none;
     border-color: var(--border-focus);
     box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.15);
@@ -3151,9 +3145,8 @@ footer .friction-customisation {
     line-height: 20px;
     color: var(--text-muted);
     text-align: left;
-}
-
-.grayscale-controls .a-toggle.redirect-toggle .redirect-loop-warning {
+}.grayscale-controls .a-toggle.redirect-toggle .redirect-loop-warning,
+.feature-panel .redirect-loop-warning {
     margin: 6px 0 0 0;
     padding: 0;
     color: var(--redirect-loop-warning-color);
@@ -3161,9 +3154,8 @@ footer .friction-customisation {
     font-weight: 500;
     line-height: 1.35;
     text-align: left;
-}
-
-.grayscale-controls .a-toggle.redirect-toggle .redirect-loop-warning[hidden] {
+}.grayscale-controls .a-toggle.redirect-toggle .redirect-loop-warning[hidden],
+.feature-panel .redirect-loop-warning[hidden] {
     display: none;
 }
 
@@ -3652,4 +3644,265 @@ body.eula-gate-active {
     background-color: var(--btn-primary-hover);
     transform: none;
     box-shadow: var(--shadow-sm);
+}
+/* ========================================
+   Custom section: feature cards, editor panels, Hide distractions
+   ======================================== */
+.custom-section .grayscale-controls {
+    margin-top: 0;
+}
+
+/* The old checkbox rows stay in the DOM for their logic; the cards show them. */
+.grayscale-controls .a-toggle.feature-row {
+    padding-left: 0;
+    min-height: 0;
+    margin-bottom: 0;
+}
+
+.grayscale-controls .a-toggle.feature-row > input[type="checkbox"],
+.grayscale-controls .a-toggle.feature-row > label {
+    position: absolute !important;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+.feature-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
+
+/* Compact: the name on top, the setting under it, the icon bottom-right. */
+.feature-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 5px;
+    min-width: 0;
+    padding: 6px 8px;
+    text-align: left;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.feature-card:hover {
+    border-color: var(--border-input);
+    background-color: var(--bg-hover);
+}
+
+.feature-card:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+}
+
+.feature-card.is-on {
+    border-color: var(--accent-primary);
+    background-color: var(--redd-teal-soft);
+}
+
+.feature-card.is-editing {
+    border-color: var(--feature-editing-ring);
+    box-shadow: 0 0 0 1px var(--feature-editing-ring);
+}
+
+.feature-card.lock-protected {
+    cursor: not-allowed;
+}
+
+:root {
+    --feature-editing-ring: #4a7fc1;
+}
+
+.dark-mode {
+    --feature-editing-ring: #9cc3ee;
+}
+
+.feature-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 5px;
+    min-width: 0;
+}
+
+.feature-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    color: var(--text-primary);
+}
+
+.feature-tile img,
+.feature-tile svg {
+    width: 14px;
+    height: 14px;
+    object-fit: contain;
+}
+
+/* The website's strategy icons are drawn in black: light in dark mode. */
+.dark-mode .feature-tile img {
+    filter: invert(1);
+}
+
+.feature-card-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.feature-card-state {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--text-muted);
+}
+
+.feature-card.is-on .feature-card-state {
+    color: var(--accent-primary);
+}
+
+.feature-panels {
+    margin-top: 8px;
+}
+
+.feature-panel {
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background-color: var(--bg-secondary);
+    text-align: left;
+}
+
+.feature-panel[hidden] {
+    display: none;
+}
+
+.feature-panel-title {
+    display: block;
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.feature-panel-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.feature-panel-line .access-delay-seconds-input {
+    margin: 0;
+}
+
+.feature-panel .redirect-details {
+    margin: 0;
+}
+
+.feature-panel .redirect-url-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.feature-panel-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.feature-panel-off {
+    padding: 0;
+    border: none;
+    background: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.feature-panel-off:hover {
+    color: var(--text-primary);
+}
+
+.feature-panel-done {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--accent-primary);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.feature-panel-done:hover {
+    background-color: var(--accent-hover);
+}
+
+.custom-section-divider {
+    height: 0;
+    margin: 14px 0;
+    border: none;
+    border-top: 1px solid var(--border-color);
+}
+
+.custom-section .custom-elements-controls {
+    flex-wrap: nowrap;
+}
+
+.hide-distractions-title {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.your-picks-heading {
+    margin-top: 12px !important;
+}
+
+/* No picks yet: no heading for an empty list. */
+.your-picks-heading:has(+ .custom-elements:empty) {
+    display: none;
+}
+
+.feature-panel .redirect-url-input:disabled,
+.feature-panel .redirect-url-input[readonly] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.feature-panel .access-delay-seconds-input:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
