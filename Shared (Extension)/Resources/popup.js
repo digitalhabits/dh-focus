@@ -794,6 +794,23 @@ document.addEventListener('DOMContentLoaded', function () {
             clearPopupAutofocus();
         }
 
+        /** A short message at the bottom of the popup that goes away by itself. */
+        function showToast(message) {
+            const existing = document.getElementById('popup-toast');
+            if (existing) existing.remove();
+            const toast = document.createElement('div');
+            toast.id = 'popup-toast';
+            toast.className = 'popup-toast';
+            toast.setAttribute('role', 'status');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            requestAnimationFrame(function () { toast.classList.add('is-visible'); });
+            setTimeout(function () {
+                toast.classList.remove('is-visible');
+                setTimeout(function () { toast.remove(); }, 250);
+            }, 6000);
+        }
+
         function showLockStartDialog(waitSecs, onConfirm) {
             const secs = clampSecondsField(waitSecs);
             const waitLabel = secs === 1 ? '1 second' : `${secs} seconds`;
@@ -888,6 +905,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('accept-lock-start').addEventListener('click', function () {
                 closeDialog();
                 onConfirm();
+                showToast(`Locked in. To change locked settings, click the lock icon again and wait ${waitLabel}.`);
             });
             cancelBtn.addEventListener('click', closeDialog);
             settingsBtn.addEventListener('click', function (e) {

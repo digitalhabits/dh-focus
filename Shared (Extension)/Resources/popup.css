@@ -3909,3 +3909,29 @@ body.eula-gate-active {
     opacity: 0.55;
     cursor: not-allowed;
 }
+
+/* Toast: a short confirmation above the footer. */
+.popup-toast {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 56px;
+    z-index: 10002;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background-color: var(--redd-navy);
+    color: var(--redd-canvas);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: left;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+
+.popup-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
