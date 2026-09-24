@@ -25,6 +25,7 @@ heading that fits.
 | **Redirects** | Redirect rules (relative page or other website), adding/editing/removing redirects, infinite-redirect protection, anything that changes where opening a site sends you. |
 | **Accountability** | Settings lock, unlock wait, unlock challenges/messages when about locking settings (not the delay pause itself), other accountability behaviour that is not hide/delay/redirect. |
 | **Digital Habits: Blocker Integration** | Using Focus with Digital Habits: Blocker — allowlist alignment, extension-as-blocking-method behaviour, setup/messaging that makes Blocker blocking work through Focus. |
+| **Privacy** | What Focus sends off your device, what it keeps about you, and the settings that control it (for example the anonymous usage count). |
 | **Fixes & Polish** | Popup/Settings layout, theme, accessibility, translations, review prompts, scrolling, typography, and other user-visible polish that does not change hide/delay/redirect/accountability/Blocker behaviour. |
 | **Internal** | Refactors, dependencies, tests, build/CI, signing, store packaging, docs-only — no meaningful effect for people using the extension. Same bullet format as other sections. GitHub only; exclude from store “What’s New”. |
 

@@ -8,20 +8,85 @@ platform tags, and Internal). Store “What’s New” / AMO notes are generated
 `scripts/changelog-to-store-whats-new.js` (excludes Internal; keeps untagged
 plus platform-relevant tags; strips markdown).
 
-## v6.9.2
+## v6.9.3
 
-This update comes with some under-the-hood improvements.
+This update comes with some design improvements and under-the-hood improvements.
+
+### Hide Distracting Elements
+
+- Greyscale now greys the whole page, including things a site keeps on top
+  such as chat bubbles and cookie banners, while Focus's own picker bar and
+  delay screen stay in colour.
+- Pick… now only affects the tab you are in, not every open tab on that site
+  or your other computers.
+- Picking no longer dims the page on some sites, and the highlight stays on
+  the element as you scroll.
+- Undo on the picker bar only appears when there is something on the page to
+  undo.
+- The picker bar now fits its text, and its count of hidden elements updates
+  when you change your picks in the popup.
+
+### Delay Opening Websites
+
+- Turning Delay off during a countdown now ends the countdown straight away.
+
+### Redirects
+
+- Editing a redirect is more reliable: moving between fields keeps your place,
+  and an emptied field no longer looks saved when it isn't.
+
+### Accountability
+
+- Lock in is only offered when there is something to lock; otherwise Focus
+  tells you so.
+- After you lock in, a short message explains how to unlock.
+
+### Privacy
+
+- [macos] Digital Habits: Focus now sends one anonymous count a day, only on
+  days it has a rule on a site you visit, so we know how many people use it.
+  It contains nothing about the sites you visit or your settings, and you can
+  turn it off in Settings under "Send anonymous usage count". The welcome
+  screen explains this under "Private by design".
+- [ios] Digital Habits: Focus now sends one anonymous count a day, only on
+  days it has a rule on a site you visit, so we know how many people use it.
+  It contains nothing about the sites you visit or your settings, and you can
+  turn it off in Settings under "Send anonymous usage count". The welcome
+  screen explains this under "Private by design".
+- [chrome] Digital Habits: Focus now sends one anonymous count a day, only on
+  days it has a rule on a site you visit, so we know how many people use it.
+  It contains nothing about the sites you visit or your settings, and you can
+  turn it off in Settings under "Send anonymous usage count". The welcome
+  screen explains this under "Private by design".
+- [edge] Digital Habits: Focus now sends one anonymous count a day, only on
+  days it has a rule on a site you visit, so we know how many people use it.
+  It contains nothing about the sites you visit or your settings, and you can
+  turn it off in Settings under "Send anonymous usage count". The welcome
+  screen explains this under "Private by design".
 
 ### Fixes & Polish
 
+- The popup has been redesigned, with Greyscale, Delay and Redirect as compact
+  cards at the top that show their current setting.
+- The welcome screen has been simplified around a short "Private by design"
+  note.
+- The design of the Settings screen has been improved.
+- [macos] The Delay and Redirect panels now open smoothly.
 - [firefox] Focus can now be installed on Firefox for Android.
 - [firefox] "Leave a review" opens the Firefox Add-ons page correctly.
 
 ### Internal
 
-- Declared Android compatibility in the manifest (`gecko_android`) so Firefox
-  Add-ons lists the extension for Firefox for Android.
-- Updated the Firefox Add-ons link in the README to the current listing.
+- The usage count waits until the licence is accepted on the device, skips
+  developer copies, keeps one ID per month even if a reply is lost, and
+  reports iPads as iOS.
+- Declared Android compatibility in the manifest (`gecko_android`), and each
+  Firefox Add-ons submission now checks the version is listed for both Firefox
+  and Firefox for Android.
+- GitHub and store release notes are now generated from this changelog, which
+  follows a new style guide.
+- Updated repository and Firefox Add-ons links to the current names and
+  listing.
 
 ## v6.9.1
 
