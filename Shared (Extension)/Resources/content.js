@@ -565,6 +565,17 @@
         feedbackContainer.appendChild(doneButton);
     }
 
+    // Keep the picker bar's count in step when picks change elsewhere,
+    // e.g. removed or edited in the popup, or synced from another device.
+    function refreshFeedbackCount(merged) {
+        if (!feedbackContainer || !isSelecting || !currentSiteIdentifier) return;
+        const rememberKey = `${currentSiteIdentifier}RememberSettings`;
+        chrome.storage.sync.get(rememberKey, function (result) {
+            if (!feedbackContainer) return;
+            updateFeedbackMessage('Click element to hide it', sessionHiddenSelectors.length > 0, merged.length, result[rememberKey] === false);
+        });
+    }
+
     function handleUndo() {
         if (sessionHiddenSelectors.length === 0 || !currentSiteIdentifier) return;
         const customStorageKey = `${currentSiteIdentifier}CustomHiddenElements`;
@@ -1268,6 +1279,7 @@
                 if (JSON.stringify(merged) !== JSON.stringify(currentCustomElements)) {
                     applyCustomElementStyles(currentSiteIdentifier, merged);
                     lastAppliedCustomElements[currentSiteIdentifier] = [...merged];
+                    refreshFeedbackCount(merged);
                 }
             });
 
@@ -1375,6 +1387,7 @@
                 const mergedSelectors = Array.from(new Set([...baseSelectors, ...sessionHiddenSelectors]));
                 applyCustomElementStyles(currentSiteIdentifier, mergedSelectors);
                 lastAppliedCustomElements[currentSiteIdentifier] = [...mergedSelectors];
+                refreshFeedbackCount(mergedSelectors);
                 sendResponse({ success: true, customSelectors: mergedSelectors });
             });
             return true; // async response
@@ -1397,6 +1410,7 @@
                 if (!Array.isArray(baseSelectors)) baseSelectors = [];
                 const mergedSelectors = Array.from(new Set([...baseSelectors, ...sessionHiddenSelectors]));
                 applyCustomElementStyles(currentSiteIdentifier, mergedSelectors);
+                refreshFeedbackCount(mergedSelectors);
                 sendResponse({ success: true, customSelectors: mergedSelectors });
             });
             return true; // async response
@@ -1411,6 +1425,7 @@
                 console.log('Reapplying styles with selectors:', mergedSelectors);
                 applyCustomElementStyles(currentSiteIdentifier, mergedSelectors);
                 lastAppliedCustomElements[currentSiteIdentifier] = [...mergedSelectors];
+                refreshFeedbackCount(mergedSelectors);
                 sendResponse({ success: true });
             });
             return true; // async response
