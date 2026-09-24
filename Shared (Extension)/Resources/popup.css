@@ -3872,6 +3872,20 @@ body.eula-gate-active {
     background-color: var(--accent-hover);
 }
 
+/* Teal keyboard ring, as on .feature-card; Chrome's default is blue. */
+.feature-panel-off:focus,
+.feature-panel-done:focus,
+.eula-overlay .btn-primary:focus {
+    outline: none;
+}
+
+.feature-panel-off:focus-visible,
+.feature-panel-done:focus-visible,
+.eula-overlay .btn-primary:focus-visible {
+    outline: 2px solid var(--border-focus);
+    outline-offset: 2px;
+}
+
 .custom-section-divider {
     height: 0;
     margin: 14px 0;
