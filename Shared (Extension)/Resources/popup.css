@@ -3968,3 +3968,34 @@ body.manual-css-enabled .custom-section .hide-distractions-title {
     opacity: 1;
     transform: translateY(0);
 }
+
+/* Redirects-to-this-site rows: × then the "from" field share the first column,
+   so the × takes its room from that field alone. Kept last in the file so it
+   outranks the shared .redirect-url-input width and margin rules. */
+.redirect-to-current-site-list .redirect-pair {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 8px;
+}
+
+.redirect-to-current-site-list .redirect-pair .redirect-rule-remove {
+    position: static;
+    transform: none;
+    grid-area: 1 / 1;
+    justify-self: start;
+}
+
+.redirect-to-current-site-list .redirect-pair .redirect-from-input.redirect-url-input {
+    grid-area: 1 / 1;
+    width: calc(100% - var(--selector-box-size) - 8px);
+    margin-left: calc(var(--selector-box-size) + 8px);
+}
+
+.redirect-to-current-site-list .redirect-pair .redirect-pair-arrow {
+    grid-area: 1 / 2;
+}
+
+.redirect-to-current-site-list .redirect-pair .redirect-to-input {
+    grid-area: 1 / 3;
+}
