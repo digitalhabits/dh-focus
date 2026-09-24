@@ -2160,6 +2160,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const list = document.getElementById('redirect-to-current-site-list');
             const group = document.getElementById('redirect-to-current-site-group');
             if (!list || !group) return;
+            // A save re-renders the list; remember which field had focus (e.g. the one
+            // just clicked into, which blurred the other and caused the save).
+            const focused = list.contains(document.activeElement) ? document.activeElement : null;
+            const refocus = focused && focused.closest('.redirect-pair') && {
+                siteId: focused.closest('.redirect-pair').dataset.siteId,
+                field: focused.classList.contains('redirect-from-input') ? '_fromInput' : '_toInput'
+            };
             list.innerHTML = '';
 
             if (!rules || rules.length === 0) {
@@ -2182,19 +2189,21 @@ document.addEventListener('DOMContentLoaded', function () {
                         });
                     }
                 });
+                pair.dataset.siteId = activeSiteId;
 
                 function commitRule() {
                     const fromRaw = pair._fromInput.value.trim();
                     const toRaw = pair._toInput.value.trim();
                     pair._fromInput.value = fromRaw;
                     pair._toInput.value = toRaw;
+                    if (fromRaw === rule.from && toRaw === rule.url) return;
 
-                    if (!fromRaw || !toRaw) {
-                        return;
-                    }
-
-                    const newSiteId = siteIdFromRedirectFromInput(fromRaw);
+                    // Nothing to save: put the rule back as it was, so an empty field
+                    // never looks like a change. The × is the only way to delete.
+                    const newSiteId = fromRaw && toRaw && siteIdFromRedirectFromInput(fromRaw);
                     if (!newSiteId) {
+                        pair._fromInput.value = rule.from;
+                        pair._toInput.value = rule.url;
                         return;
                     }
 
@@ -2208,6 +2217,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     const previousSiteId = activeSiteId;
                     activeSiteId = newSiteId;
+                    pair.dataset.siteId = newSiteId;
                     deleteRedirectRule(previousSiteId, function () {
                         saveRedirectRule(newSiteId, toRaw, function () {
                             refreshRedirectRulesToCurrentSiteList();
@@ -2231,6 +2241,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 list.appendChild(pair);
+                if (refocus && refocus.siteId === activeSiteId) {
+                    const input = pair[refocus.field];
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                }
             });
         }
 
