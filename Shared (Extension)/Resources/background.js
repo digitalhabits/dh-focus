@@ -419,8 +419,13 @@ let pingSentDay = null;
 let pingInFlight = false;
 let pingLastAttempt = 0;
 
-function pingPlatform() {
-  if (IS_SAFARI) return IS_IOS ? "safari-ios" : "safari-mac";
+async function pingPlatform() {
+  if (IS_SAFARI) {
+    // iPadOS can present a Mac user agent; the platform info says "ios".
+    let os = null;
+    try { os = (await chrome.runtime.getPlatformInfo()).os; } catch { }
+    return IS_IOS || os === "ios" ? "safari-ios" : "safari-mac";
+  }
   if (/\bEdg\//.test(navigator.userAgent || "")) return "edge";
   return "chrome";
 }
@@ -467,7 +472,7 @@ async function maybeSendUsagePing() {
     const res = await fetch(PING_URL, {
       method: "POST",
       headers: { "content-type": "text/plain" },
-      body: JSON.stringify({ product: "focus", platform: pingPlatform(), key }),
+      body: JSON.stringify({ product: "focus", platform: await pingPlatform(), key }),
       credentials: "omit",
     });
     if (!res.ok) return;
