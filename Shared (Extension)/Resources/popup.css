@@ -3375,10 +3375,8 @@ body.eula-gate-active {
     min-width: 0;
 }
 
-/* Title and subtitle each stay on one line at the 310px popup width. */
 .eula-header-title {
     margin: 0;
-    white-space: nowrap;
     font-family: var(--font-heading);
     font-size: 1.3em;
     font-weight: 700;
@@ -3389,7 +3387,6 @@ body.eula-gate-active {
 
 .eula-header-subtitle {
     margin: 3px 0 0;
-    white-space: nowrap;
     font-size: 0.85em;
     line-height: 1.3;
     color: var(--text-muted);
