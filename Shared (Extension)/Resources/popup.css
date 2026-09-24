@@ -2468,7 +2468,10 @@ footer .friction-customisation {
     color: inherit;
     text-decoration: underline;
     text-underline-offset: 2px;
-    padding: 2px 4px;
+    /* Inline in a sentence: no side padding, and the 1px focus border is
+       pulled back so the links space like ordinary text. */
+    padding: 2px 0;
+    margin: 0 -1px;
     border: 1px solid transparent;
     border-radius: 6px;
     transition: border-color 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
