@@ -346,7 +346,6 @@
             feedbackContainer.style.cursor = 'move';
             feedbackContainer.style.pointerEvents = 'auto';
             feedbackContainer.style.userSelect = 'none';
-            feedbackContainer.style.minWidth = '230px';
             feedbackContainer.style.maxWidth = '400px';
             feedbackContainer.style.flexWrap = 'nowrap';
             feedbackContainer.style.transition = 'background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease';
