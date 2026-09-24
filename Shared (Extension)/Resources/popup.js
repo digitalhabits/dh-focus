@@ -1765,9 +1765,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const panelFor = { delay: delayPanel, redirect: redirectPanel };
 
+            /*
+             * Safari on macOS draws a newly shown panel before its popover has grown
+             * to fit it. Keep the panel invisible (but laid out, so Safari still grows)
+             * until the popup's resize events settle, then fade it in.
+             */
+            const SAFARI_MAC_POPOVER = location.protocol === 'safari-web-extension:' && navigator.maxTouchPoints === 0;
+
+            function revealAfterPopupGrows(panel) {
+                panel.classList.add('is-awaiting-resize');
+                let settle = null;
+                const reveal = function () {
+                    window.removeEventListener('resize', onResize);
+                    clearTimeout(settle);
+                    clearTimeout(cap);
+                    panel.classList.remove('is-awaiting-resize');
+                };
+                const onResize = function () {
+                    clearTimeout(settle);
+                    settle = setTimeout(reveal, 50);
+                };
+                window.addEventListener('resize', onResize);
+                settle = setTimeout(reveal, 150); // no resize at all: the popup was already big enough
+                const cap = setTimeout(reveal, 400);
+            }
+
             function openPanel(feature) {
                 openFeature = feature;
                 Object.keys(panelFor).forEach(function (key) {
+                    if (SAFARI_MAC_POPOVER && key === feature && panelFor[key].hidden) revealAfterPopupGrows(panelFor[key]);
                     panelFor[key].hidden = key !== feature;
                     cards[key].classList.toggle('is-editing', key === feature);
                     cards[key].setAttribute('aria-expanded', key === feature ? 'true' : 'false');

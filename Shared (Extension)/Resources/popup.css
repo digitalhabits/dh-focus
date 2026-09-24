@@ -3802,6 +3802,16 @@ body.eula-gate-active {
     display: none;
 }
 
+/* Safari (macOS) only, set by popup.js: laid out but invisible until the popover has grown. */
+.feature-panel {
+    transition: opacity 0.12s ease;
+}
+
+.feature-panel.is-awaiting-resize {
+    opacity: 0;
+    transition: none;
+}
+
 .feature-panel-title {
     display: block;
     margin: 0 0 8px;
