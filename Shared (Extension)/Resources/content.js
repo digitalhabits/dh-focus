@@ -367,7 +367,8 @@
                 if (!Array.isArray(customSelectors)) customSelectors = [];
                 const rememberEnabled = result[rememberKey] !== false;
                 const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
-                updateFeedbackMessage('Click element to hide it', merged.length > 0, merged.length, !rememberEnabled);
+                // Undo only reverses picks made since this page loaded, so offer it only then.
+                updateFeedbackMessage('Click element to hide it', sessionHiddenSelectors.length > 0, merged.length, !rememberEnabled);
             });
         } else {
             updateFeedbackMessage('Click element to hide it');
@@ -585,13 +586,13 @@
                     // Reapply merged (persistent + remaining session)
                     const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
                     applyCustomElementStyles(currentSiteIdentifier, merged);
-                    updateFeedbackMessage('Click element to hide it', merged.length > 0, merged.length, false);
+                    updateFeedbackMessage('Click element to hide it', sessionHiddenSelectors.length > 0, merged.length, false);
                 });
             } else {
                 // Session-only: just reapply merged without touching storage
                 const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
                 applyCustomElementStyles(currentSiteIdentifier, merged);
-                updateFeedbackMessage('Click element to hide it', merged.length > 0, merged.length, true);
+                updateFeedbackMessage('Click element to hide it', sessionHiddenSelectors.length > 0, merged.length, true);
                 // Notify popup that session selectors changed
                 chrome.runtime.sendMessage({ type: 'sessionSelectorsChanged', siteIdentifier: currentSiteIdentifier, selectors: merged });
             }
@@ -770,7 +771,7 @@
             const alreadyHas = customSelectors.includes(selector) || sessionHiddenSelectors.includes(selector);
             if (alreadyHas) {
                 const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
-                updateFeedbackMessage('Element already hidden', false, merged.length, !rememberEnabled);
+                updateFeedbackMessage('Element already hidden', sessionHiddenSelectors.length > 0, merged.length, !rememberEnabled);
                 return;
             }
             sessionHiddenSelectors.push(selector);
