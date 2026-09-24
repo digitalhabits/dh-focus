@@ -3888,6 +3888,18 @@ body.eula-gate-active {
 
 .custom-section .custom-elements-controls {
     flex-wrap: nowrap;
+    gap: 4px;
+}
+
+/* With Add CSS on: title on its own line, then Pick… and Add CSS side by side. */
+body.manual-css-enabled .custom-section .custom-elements-controls {
+    flex-wrap: wrap;
+    gap: 8px 6px;
+}
+
+body.manual-css-enabled .custom-section .hide-distractions-title {
+    flex-basis: 100%;
+    text-align: left;
 }
 
 .hide-distractions-title {
