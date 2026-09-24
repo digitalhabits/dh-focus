@@ -3830,13 +3830,15 @@ body.eula-gate-active {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 12px;
+    gap: 6px;
     margin-top: 10px;
 }
 
+/* Ghost button: same box as Done, grey fill on hover (as the lock dialog's secondary button). */
 .feature-panel-off {
-    padding: 0;
+    padding: 6px 14px;
     border: none;
+    border-radius: 8px;
     background: none;
     font-family: inherit;
     font-size: 13px;
@@ -3847,6 +3849,7 @@ body.eula-gate-active {
 
 .feature-panel-off:hover {
     color: var(--text-primary);
+    background-color: var(--btn-custom-hide-hover-bg);
 }
 
 .feature-panel-done {
