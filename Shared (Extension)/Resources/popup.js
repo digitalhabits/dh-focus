@@ -1804,7 +1804,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (on && key === 'delay') state = `${secondsInput ? secondsInput.value : 10} sec`;
                     if (on && key === 'redirect') {
                         const dest = urlInput ? shortDestination(urlInput.value.trim()) : '';
-                        state = dest || 'Set page';
+                        state = dest || 'Set up';
                     }
                     const stateEl = card.querySelector('.feature-card-state');
                     stateEl.textContent = state;
