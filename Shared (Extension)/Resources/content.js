@@ -1028,6 +1028,20 @@
         });
     }
 
+    // Delay turned off (saved or session-only) while its countdown shows: open the
+    // page now. Lock mode stops Delay being turned off, so it is unaffected.
+    function endAccessDelayIfTurnedOff() {
+        if (!accessDelayActive || !currentSiteIdentifier) return;
+        const statusKey = `${currentSiteIdentifier}AccessDelayStatus`;
+        chrome.storage.sync.get(statusKey, function (result) {
+            let enabled = result[statusKey] === true;
+            if (Object.prototype.hasOwnProperty.call(sessionOverrides, statusKey)) {
+                enabled = sessionOverrides[statusKey] === true;
+            }
+            if (!enabled && accessDelayActive) endAccessDelayGate();
+        });
+    }
+
     function resolveRedirectTarget(rawInput) {
         const raw = (rawInput || '').trim();
         if (!raw) return null;
@@ -1153,6 +1167,8 @@
     function applySettingsFromStorage() {
         if (!chrome.runtime?.id) // don't run if disconnected
             return;
+
+        endAccessDelayIfTurnedOff();
 
         if (currentPlatform) {
             const platformStatusKey = `${currentPlatform}Status`;
@@ -1328,6 +1344,10 @@
             if (hasRelevantChanges) {
                 // Apply changes immediately
                 setTimeout(applySettingsFromStorage, 100);
+            }
+
+            if (currentSiteIdentifier && changes[`${currentSiteIdentifier}AccessDelayStatus`]) {
+                endAccessDelayIfTurnedOff();
             }
 
             if (currentSiteIdentifier) {
