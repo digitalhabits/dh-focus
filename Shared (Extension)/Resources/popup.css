@@ -3716,21 +3716,14 @@ body.eula-gate-active {
     background-color: var(--redd-teal-soft);
 }
 
+/* The card whose panel is open: a thicker teal border. */
 .feature-card.is-editing {
-    border-color: var(--feature-editing-ring);
-    box-shadow: 0 0 0 1px var(--feature-editing-ring);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 1px var(--accent-primary);
 }
 
 .feature-card.lock-protected {
     cursor: not-allowed;
-}
-
-:root {
-    --feature-editing-ring: #4a7fc1;
-}
-
-.dark-mode {
-    --feature-editing-ring: #9cc3ee;
 }
 
 .feature-card-foot {
