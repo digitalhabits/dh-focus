@@ -412,6 +412,8 @@ const PING_URL = "https://plan.digitalhabits.org/api/ping";
 const PING_STATE_KEY = "usagePing";
 const PING_ENABLED_KEY = "usagePingEnabled";
 const PING_RETRY_MS = 60 * 60_000;
+const EULA_KEY = "reddfocus_eula";
+const EULA_REVISION = 1; // CURRENT_EULA_REVISION in popup.js
 const IS_FIREFOX = BLOCKED_PAGE_PREFIX.startsWith("moz-extension://");
 let pingSentDay = null;
 let pingInFlight = false;
@@ -434,6 +436,13 @@ function randomKey() {
 
 async function pingAllowed() {
   if (IS_FIREFOX) return false;
+  const eula = (await chrome.storage.local.get(EULA_KEY))[EULA_KEY];
+  if (!eula || eula.acceptedRevision !== EULA_REVISION) return false;
+  // Unpacked developer copies are not counted. getSelf needs no permission.
+  if (chrome.management && chrome.management.getSelf) {
+    const self = await chrome.management.getSelf();
+    if (self && self.installType === "development") return false;
+  }
   const stored = await chrome.storage.sync.get(PING_ENABLED_KEY);
   return stored[PING_ENABLED_KEY] !== false;
 }

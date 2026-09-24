@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // EULA (ReDD 2FA parity: revision + storage.local)
         // ========================================
         const EULA_STORAGE_KEY = 'reddfocus_eula';
-        const CURRENT_EULA_REVISION = 1;
+        const CURRENT_EULA_REVISION = 1; // background.js checks it too (EULA_REVISION)
 
         function showEulaOverlayThen(onAccept) {
             const eulaOverlay = document.getElementById('eula-overlay');
