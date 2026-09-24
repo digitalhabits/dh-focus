@@ -19,6 +19,10 @@
  *   FIREFOX_EXPECTED_VERSION optional; used for idempotent "already on AMO" checks
  *   FIREFOX_POLL_TIMEOUT_MS  validation poll timeout (default: 20m)
  *   FIREFOX_CREATE_RETRIES   create-version attempts (default: 6)
+ *
+ * Compatibility: every version is created for Firefox and Firefox for Android
+ * (min versions from the manifest), then read back; the run fails if AMO has
+ * not marked it for both, so Android can't silently drop off the listing.
  */
 
 const crypto = require('node:crypto');
@@ -28,6 +32,9 @@ const { File } = require('node:buffer');
 
 const AMO_BASE = 'https://addons.mozilla.org/api/v5';
 const JWT_TTL_S = 4 * 60; // AMO allows short-lived JWTs; refresh per request
+// AMO application names. Shorthand array form: min/max come from the manifest's
+// browser_specific_settings.gecko / gecko_android.
+const COMPATIBLE_APPS = ['firefox', 'android'];
 
 function requireEnv(name) {
   const value = process.env[name];
@@ -172,8 +179,26 @@ async function createVersion(extensionId, uploadUuid, issuer, secret) {
     issuer,
     secret,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ upload: uploadUuid }),
+    body: JSON.stringify({ upload: uploadUuid, compatibility: COMPATIBLE_APPS }),
   });
+}
+
+// versionRef: numeric id, or `v<version>` to look up by version number.
+async function ensureCompatibility(extensionId, versionRef, issuer, secret) {
+  const version = await amoFetch(
+    `/addons/addon/${encodeURIComponent(extensionId)}/versions/${encodeURIComponent(versionRef)}/`,
+    { issuer, secret },
+  );
+  const compat = version?.compatibility || {};
+  const missing = COMPATIBLE_APPS.filter((app) => !compat[app]);
+  const summary = Object.entries(compat).map(([app, r]) => `${app} ${r.min}–${r.max}`).join(', ') || 'none';
+  console.log(`AMO compatibility for ${version?.version || versionRef}: ${summary}`);
+  if (missing.length) {
+    throw new Error(
+      `AMO version ${version?.version || versionRef} is not marked compatible with: ${missing.join(', ')}. ` +
+      'Fix it under Manage Status & Versions on the AMO Developer Hub.',
+    );
+  }
 }
 
 async function createVersionWithRetries({
@@ -252,6 +277,7 @@ async function main() {
   if (expectedVersion) {
     if (await versionExists(extensionId, expectedVersion, issuer, secret)) {
       console.log(`Version ${expectedVersion} is already on AMO — nothing to submit.`);
+      await ensureCompatibility(extensionId, `v${expectedVersion}`, issuer, secret);
       return;
     }
   }
@@ -262,7 +288,7 @@ async function main() {
 
   const uploaded = await uploadZip(zipPath, channel, issuer, secret);
   const validated = await waitForValidation(uploaded.uuid, issuer, secret, pollTimeoutMs);
-  await createVersionWithRetries({
+  const created = await createVersionWithRetries({
     extensionId,
     uploadUuid: validated.uuid,
     expectedVersion,
@@ -270,6 +296,7 @@ async function main() {
     secret,
     retries: createRetries,
   });
+  await ensureCompatibility(extensionId, created.id || `v${created.version}`, issuer, secret);
 
   console.log('Firefox Add-ons submit succeeded.');
 }
