@@ -461,6 +461,8 @@ async function maybeSendUsagePing() {
     if (!(await pingAllowed())) return;
     const month = today.slice(0, 7);
     const key = state.month === month && state.key ? state.key : randomKey();
+    // Keep the key before sending; if it cannot be saved, send nothing.
+    await chrome.storage.local.set({ [PING_STATE_KEY]: { month, key } });
     pingLastAttempt = Date.now();
     const res = await fetch(PING_URL, {
       method: "POST",
