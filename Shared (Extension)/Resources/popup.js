@@ -1373,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                                 </svg>
                                 <span class="help-icon-tooltip" role="tooltip">
-                                    Learn about CSS selectors from Mozilla
+                                    Click to learn about CSS selectors<br>from Mozilla
                                 </span>
                             </a>
                         </label>

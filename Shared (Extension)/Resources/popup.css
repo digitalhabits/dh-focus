@@ -1539,6 +1539,8 @@ p.how-to-description {
 }
 
 .edit-dialog-field label {
+    /* Anchors the help tooltip to the field's width. */
+    position: relative;
     display: block;
     margin: 0 0 5px 0;
     font-family: Arial, Helvetica, sans-serif;
@@ -1560,8 +1562,7 @@ p.how-to-description {
     color: var(--icon-color);
     text-decoration: none;
     vertical-align: text-bottom;
-    position: relative;
-    top: -1px;
+    margin-bottom: 1px;
     transition: color 0.2s;
 }
 
@@ -1574,14 +1575,17 @@ p.how-to-description {
     display: block;
 }
 
+/* Right-aligned with the field; never wider than it. The <br> in the text sets
+   the line break, so no wrapped line leaves empty space on the right. */
 .edit-dialog-field label .help-icon-tooltip {
     position: absolute;
-    left: 0;
+    right: 0;
     bottom: calc(100% + 8px);
     z-index: 20;
     display: none;
     width: max-content;
-    max-width: 240px;
+    max-width: 100%;
+    box-sizing: border-box;
     padding: 8px 10px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
