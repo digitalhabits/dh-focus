@@ -1219,7 +1219,9 @@ document.addEventListener('DOMContentLoaded', function () {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && isSelectionModeActive) {
                 e.preventDefault();
-                setActiveTabSelection(false);
+                if (currentSiteIdentifier) {
+                    chrome.storage.sync.set({ [`${currentSiteIdentifier}SelectionActive`]: false });
+                }
                 const addButtonId = currentPlatform
                     ? `${currentPlatform}AddElementButton`
                     : 'genericAddElementButton';
@@ -2509,58 +2511,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        /*
-         * Pick mode lives in the active tab only (see content.js,
-         * notifySelectionState). The popup starts and stops it by message and
-         * asks the tab for its state when it opens.
-         */
-        function currentPickButton() {
-            const id = currentPlatform ? `${currentSiteIdentifier}AddElementButton` : 'genericAddElementButton';
-            return document.getElementById(id);
-        }
-
-        function showSelectionState(active) {
-            isSelectionModeActive = active;
-            const addButton = currentPickButton();
-            if (!addButton) return;
-            addButton.classList.toggle('active', active);
-            addButton.textContent = active ? 'Click to hide' : 'Pick…';
-        }
-
-        function setActiveTabSelection(active) {
-            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                if (!tabs || !tabs[0]) return;
-                chrome.tabs.sendMessage(tabs[0].id, { type: 'setSelectionActive', active: active }, function (response) {
-                    if (chrome.runtime.lastError || !response) return;
-                    showSelectionState(response.active === true);
-                });
-            });
-        }
-
-        function syncSelectionStateFromTab(siteIdentifier) {
-            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                if (!tabs || !tabs[0]) return;
-                chrome.tabs.sendMessage(tabs[0].id, { type: 'getSelectionState' }, function (response) {
-                    if (chrome.runtime.lastError || !response) return;
-                    showSelectionState(response.active === true);
-                });
-            });
-            // Older versions kept pick mode in storage.sync. Drop that key so it
-            // does not linger (or keep syncing) on this site.
-            const staleKey = `${siteIdentifier}SelectionActive`;
-            chrome.storage.sync.get(staleKey, function (result) {
-                if (result && Object.prototype.hasOwnProperty.call(result, staleKey)) {
-                    chrome.storage.sync.remove(staleKey);
-                }
-            });
-        }
-
         function setupCustomElementControls(siteIdentifier) {
             const platformSpecific = platformsWeTarget.includes(siteIdentifier);
             const addButtonId = platformSpecific ? `${siteIdentifier}AddElementButton` : 'genericAddElementButton';
             const addButton = document.getElementById(addButtonId);
-
-            syncSelectionStateFromTab(siteIdentifier);
 
             if (addButton) {
                 addButton.addEventListener('click', function () {
@@ -2568,12 +2522,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         isSelectionModeActive = false;
                         addButton.classList.remove('active');
                         addButton.textContent = 'Pick…';
-                        setActiveTabSelection(false);
+                        chrome.storage.sync.set({ [`${siteIdentifier}SelectionActive`]: false });
                     } else {
                         isSelectionModeActive = true;
                         addButton.classList.add('active');
                         addButton.textContent = 'Click to hide';
-                        setActiveTabSelection(true);
+                        chrome.storage.sync.set({ [`${siteIdentifier}SelectionActive`]: true });
                     }
                 });
             } else { console.error("Add button not found:", addButtonId); }
@@ -3036,15 +2990,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     updateCustomElementsList(currentSiteIdentifier, newSelectors);
                 }
 
-            }
-        });
+                // Check for selection state changes
+                const selectionKey = `${currentSiteIdentifier}SelectionActive`;
+                if (changes[selectionKey]) {
+                    const isActive = changes[selectionKey].newValue === true;
+                    isSelectionModeActive = isActive;
 
-        // The active tab reports when pick mode starts or stops (Done, Escape
-        // on the page), so the Pick… button follows it.
-        chrome.runtime.onMessage.addListener(function (message) {
-            if (message && message.type === 'selectionStateChanged' &&
-                currentSiteIdentifier && message.siteIdentifier === currentSiteIdentifier) {
-                showSelectionState(message.active === true);
+                    // Update button state
+                    const addButtonId = currentPlatform ? `${currentSiteIdentifier}AddElementButton` : 'genericAddElementButton';
+                    const addButton = document.getElementById(addButtonId);
+                    if (addButton) {
+                        if (isActive) {
+                            addButton.classList.add('active');
+                            addButton.textContent = 'Click to hide';
+                        } else {
+                            addButton.classList.remove('active');
+                            addButton.textContent = 'Pick…';
+                        }
+                    }
+                }
             }
         });
 
