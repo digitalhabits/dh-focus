@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // EULA (ReDD 2FA parity: revision + storage.local)
         // ========================================
         const EULA_STORAGE_KEY = 'reddfocus_eula';
-        const CURRENT_EULA_REVISION = 1;
+        const CURRENT_EULA_REVISION = 1; // background.js checks it too (EULA_REVISION)
 
         function showEulaOverlayThen(onAccept) {
             const eulaOverlay = document.getElementById('eula-overlay');
@@ -2728,6 +2728,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 showUnsupportedPageMessage('Open a website tab to use Digital Habits: Focus.');
                 return;
             }
+
+            // Usage count fallback: on some iOS versions a content script's
+            // message does not wake the background, so the popup asks too.
+            chrome.tabs.sendMessage(tab[0].id, { type: 'hasActiveRule' }, function (response) {
+                if (chrome.runtime.lastError || !response || !response.active) return;
+                chrome.runtime.sendMessage({ type: 'usagePing', url: tab[0].url }, function () { void chrome.runtime.lastError; });
+            });
 
             const currentHost = currentURL.hostname;
             currentPageHostname = currentHost;

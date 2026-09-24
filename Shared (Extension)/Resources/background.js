@@ -402,22 +402,30 @@ function connectNative() {
 }
 
 // Anonymous usage ping, so we know roughly how many people use Focus.
-// At most once per UTC day we send { product, platform, key }. The key is
-// a random id that is replaced at the start of each calendar month, so no
-// two months can be linked. Nothing about sites, settings, or the user is
-// sent. Users can turn it off in Settings. Firefox gets no ping: Mozilla
-// would make it opt-in, and the add-ons site already counts daily users.
+// At most once per UTC day, when the user is on a site where one of their own
+// Focus rules is on (content.js or the popup tells us), we send
+// { product, platform, key }. The key is a random id that is replaced at the
+// start of each calendar month, so no two months can be linked. Nothing about
+// sites, settings, or the user is sent. Users can turn it off in Settings.
+// Firefox sends no ping; it is counted from Mozilla's own add-on statistics.
 const PING_URL = "https://plan.digitalhabits.org/api/ping";
 const PING_STATE_KEY = "usagePing";
 const PING_ENABLED_KEY = "usagePingEnabled";
 const PING_RETRY_MS = 60 * 60_000;
+const EULA_KEY = "reddfocus_eula";
+const EULA_REVISION = 1; // CURRENT_EULA_REVISION in popup.js
 const IS_FIREFOX = BLOCKED_PAGE_PREFIX.startsWith("moz-extension://");
 let pingSentDay = null;
 let pingInFlight = false;
 let pingLastAttempt = 0;
 
-function pingPlatform() {
-  if (IS_SAFARI) return IS_IOS ? "safari-ios" : "safari-mac";
+async function pingPlatform() {
+  if (IS_SAFARI) {
+    // iPadOS can present a Mac user agent; the platform info says "ios".
+    let os = null;
+    try { os = (await chrome.runtime.getPlatformInfo()).os; } catch { }
+    return IS_IOS || os === "ios" ? "safari-ios" : "safari-mac";
+  }
   if (/\bEdg\//.test(navigator.userAgent || "")) return "edge";
   return "chrome";
 }
@@ -433,6 +441,13 @@ function randomKey() {
 
 async function pingAllowed() {
   if (IS_FIREFOX) return false;
+  const eula = (await chrome.storage.local.get(EULA_KEY))[EULA_KEY];
+  if (!eula || eula.acceptedRevision !== EULA_REVISION) return false;
+  // Unpacked developer copies are not counted. getSelf needs no permission.
+  if (chrome.management && chrome.management.getSelf) {
+    const self = await chrome.management.getSelf();
+    if (self && self.installType === "development") return false;
+  }
   const stored = await chrome.storage.sync.get(PING_ENABLED_KEY);
   return stored[PING_ENABLED_KEY] !== false;
 }
@@ -442,7 +457,6 @@ async function maybeSendUsagePing() {
   if (pingSentDay === today || pingInFlight) return;
   if (Date.now() - pingLastAttempt < PING_RETRY_MS) return;
   pingInFlight = true;
-  pingLastAttempt = Date.now();
   try {
     const state = (await chrome.storage.local.get(PING_STATE_KEY))[PING_STATE_KEY] || {};
     if (state.lastDay === today) {
@@ -452,10 +466,13 @@ async function maybeSendUsagePing() {
     if (!(await pingAllowed())) return;
     const month = today.slice(0, 7);
     const key = state.month === month && state.key ? state.key : randomKey();
+    // Keep the key before sending; if it cannot be saved, send nothing.
+    await chrome.storage.local.set({ [PING_STATE_KEY]: { month, key } });
+    pingLastAttempt = Date.now();
     const res = await fetch(PING_URL, {
       method: "POST",
       headers: { "content-type": "text/plain" },
-      body: JSON.stringify({ product: "focus", platform: pingPlatform(), key }),
+      body: JSON.stringify({ product: "focus", platform: await pingPlatform(), key }),
       credentials: "omit",
     });
     if (!res.ok) return;
@@ -469,7 +486,6 @@ async function maybeSendUsagePing() {
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  maybeSendUsagePing();
   refreshSafariBlocklist();
   // Cheap early-out when standalone (no active website rules).
   if (!webEnforcementActive()) {
@@ -486,7 +502,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 connectNative();
 refreshSafariBlocklist();
-maybeSendUsagePing();
 // Safari's native handler is request/response only, so keep polling
 // for Digital Habits: Blocker payload changes even when the user sits on a single
 // tab. Compliance is verified by Digital Habits: Blocker from Safari's plist, not
@@ -499,5 +514,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message && message.type === "getBlocklist") {
     sendResponse({ blocklist, blocks: activeBlocks });
     return true;
+  }
+  // A page with one of the user's Focus rules on; Blocker's own blocks don't count.
+  if (message && message.type === "usagePing") {
+    const url = sender.tab ? sender.tab.url : message.url;
+    if (!isBlockedPageUrl(url) && !isBlocked(url)) maybeSendUsagePing();
   }
 });
