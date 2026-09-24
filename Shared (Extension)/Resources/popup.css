@@ -294,7 +294,7 @@ textarea::placeholder {
 .popup-sticky-header {
     flex: 0 0 auto;
     background-color: var(--bg-primary);
-    padding: var(--settings-overlay-padding-y) 1rem 0;
+    padding: var(--settings-overlay-padding-y) 1rem;
     box-sizing: border-box;
     z-index: 50;
 }
@@ -319,7 +319,8 @@ textarea::placeholder {
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 10px 1rem 0.5rem;
+    /* Room for the 2px focus ring + 2px offset, which the scrollport would clip. */
+    padding: 4px 1rem 0.5rem;
     box-sizing: border-box;
 }
 
