@@ -2990,13 +2990,14 @@ footer .friction-customisation {
     text-align: left;
 }
 
-.redirect-to-current-site-heading {
-    margin: 0 0 var(--redirect-details-gap) 0;
+/* Scoped to the group so it outranks `.a-toggle p { margin: 0 }`, which had
+   silently removed the gap. Same 5px under it as every other eyebrow. */
+.redirect-to-current-site-group .redirect-to-current-site-heading {
+    margin: 0 0 5px 0;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.04em;
-    line-height: 20px;
     text-transform: uppercase;
     color: #4d4d57;
 }
@@ -3919,6 +3920,11 @@ body.manual-css-enabled .custom-section .hide-distractions-title {
 
 .your-picks-heading {
     margin-top: 12px !important;
+}
+
+/* The list's own top margin would double the 5px gap every eyebrow has. */
+.your-picks-heading + .custom-elements {
+    margin-top: 0;
 }
 
 /* No picks yet: no heading for an empty list. */
