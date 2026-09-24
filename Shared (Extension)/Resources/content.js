@@ -785,6 +785,7 @@
                 return;
             }
             sessionHiddenSelectors.push(selector);
+            reportIfRuleActive();
             if (rememberEnabled) {
                 // Persist
                 const toSave = Array.from(new Set([...customSelectors, selector]));
@@ -1084,9 +1085,7 @@
         }
     }
 
-    function maybeRedirectFromStorage() {
-        if (!currentSiteIdentifier) return;
-
+    function redirectCandidateIds() {
         const candidateIds = [currentSiteIdentifier];
         if (currentHostname) {
             const bare = currentHostname.replace(/^www\./, '');
@@ -1095,42 +1094,44 @@
                 candidateIds.push(currentHostname);
             }
         }
+        return candidateIds;
+    }
 
-        const keys = [];
-        candidateIds.forEach(function (id) {
-            keys.push(`${id}RedirectStatus`, `${id}RedirectUrl`);
-        });
+    function redirectKeys() {
+        return redirectCandidateIds().flatMap(id => [`${id}RedirectStatus`, `${id}RedirectUrl`]);
+    }
 
-        chrome.storage.sync.get(keys, function (result) {
-            let enabled = false;
-            let rawUrl = '';
-            for (let i = 0; i < candidateIds.length; i++) {
-                const statusKey = `${candidateIds[i]}RedirectStatus`;
-                const urlKey = `${candidateIds[i]}RedirectUrl`;
-                let status = result[statusKey] === true;
-                if (Object.prototype.hasOwnProperty.call(sessionOverrides, statusKey)) {
-                    status = sessionOverrides[statusKey] === true;
-                }
-                if (!status) continue;
-                enabled = true;
-                rawUrl = typeof result[urlKey] === 'string' ? result[urlKey] : '';
-                if (Object.prototype.hasOwnProperty.call(sessionOverrides, urlKey)) {
-                    rawUrl = sessionOverrides[urlKey];
-                }
-                break;
+    // Where this page's first enabled redirect rule points, or null.
+    function redirectTargetFrom(result) {
+        const candidateIds = redirectCandidateIds();
+        for (let i = 0; i < candidateIds.length; i++) {
+            const statusKey = `${candidateIds[i]}RedirectStatus`;
+            const urlKey = `${candidateIds[i]}RedirectUrl`;
+            let status = result[statusKey] === true;
+            if (Object.prototype.hasOwnProperty.call(sessionOverrides, statusKey)) {
+                status = sessionOverrides[statusKey] === true;
             }
-
-            if (!enabled) {
-                maybeStartAccessDelayFromStorage();
-                return;
+            if (!status) continue;
+            let rawUrl = typeof result[urlKey] === 'string' ? result[urlKey] : '';
+            if (Object.prototype.hasOwnProperty.call(sessionOverrides, urlKey)) {
+                rawUrl = sessionOverrides[urlKey];
             }
+            return resolveRedirectTarget(rawUrl);
+        }
+        return null;
+    }
 
-            const targetHref = resolveRedirectTarget(rawUrl);
+    function maybeRedirectFromStorage() {
+        if (!currentSiteIdentifier) return;
+
+        chrome.storage.sync.get(redirectKeys(), function (result) {
+            const targetHref = redirectTargetFrom(result);
             if (!targetHref || isAlreadyAtRedirectTarget(targetHref)) {
                 maybeStartAccessDelayFromStorage();
                 return;
             }
 
+            reportIfRuleActive(true);
             window.location.replace(targetHref);
         });
     }
@@ -1159,6 +1160,51 @@
 
     // Session-only overrides for this page lifetime
     let sessionOverrides = {};
+
+    // Anonymous usage count (see background.js): a day counts only when the
+    // user is on a site where one of their own rules is on. Defaults never count.
+    let usageReported = false;
+
+    function siteHasActiveRule(callback) {
+        if (!currentSiteIdentifier) return callback(false);
+        const value = (result, key) => Object.prototype.hasOwnProperty.call(sessionOverrides, key) ? sessionOverrides[key] : result[key];
+        const items = currentPlatform ? elementsThatCanBeHidden.filter(item => item.startsWith(currentPlatform)) : [];
+        const site = currentSiteIdentifier;
+        const keys = items.map(item => item + 'Status').concat(`${site}CustomHiddenElements`, `${site}GrayscaleStatus`, `${site}AccessDelayStatus`, redirectKeys());
+        if (currentPlatform) keys.push(`${currentPlatform}Status`);
+        chrome.storage.sync.get(keys, function (result) {
+            const hideOn = !!currentPlatform && value(result, `${currentPlatform}Status`) !== false && items.some(item => {
+                const status = value(result, item + 'Status');
+                return item === 'youtubeThumbnails' ? !!status && status !== 'On' : status === true;
+            });
+            const custom = result[`${site}CustomHiddenElements`];
+            callback(hideOn || sessionHiddenSelectors.length > 0 || (Array.isArray(custom) && custom.length > 0) ||
+                value(result, `${site}GrayscaleStatus`) === true || value(result, `${site}AccessDelayStatus`) === true ||
+                !!redirectTargetFrom(result));
+        });
+    }
+
+    // At most once per page. ruleFired skips the check (a redirect is firing).
+    // Never throws: it runs inside Focus's own handlers.
+    function reportIfRuleActive(ruleFired) {
+        try { reportNow(ruleFired); } catch (e) { /* the count never gets in Focus's way */ }
+    }
+
+    function reportNow(ruleFired) {
+        if (usageReported || !chrome.runtime?.id) return;
+        const report = () => {
+            usageReported = true;
+            try {
+                chrome.runtime.sendMessage({ type: 'usagePing' }, function () { void chrome.runtime.lastError; });
+            } catch (e) { /* extension reloaded */ }
+        };
+        if (ruleFired) return report();
+        chrome.storage.local.get('usagePing', function (stored) {
+            const state = stored && stored.usagePing;
+            if (usageReported || (state && state.lastDay === new Date().toISOString().slice(0, 10))) return;
+            siteHasActiveRule(active => { if (active && !usageReported) report(); });
+        });
+    }
 
     // --- Listen for storage changes to apply settings immediately ---
     let lastAppliedSettings = {};
@@ -1315,6 +1361,7 @@
     // Listen for storage changes to be responsive
     chrome.storage.onChanged.addListener(function (changes, namespace) {
         if (namespace === 'sync') {
+            reportIfRuleActive();
             let hasRelevantChanges = false;
 
             // Check platform-specific changes
@@ -1367,6 +1414,7 @@
         if (!message || !message.type) return;
         if (message.type === 'sessionOverride') {
             sessionOverrides[message.key] = message.value;
+            reportIfRuleActive();
             if (typeof message.key === 'string' && message.key.endsWith('GrayscaleStatus')) {
                 applyGrayscaleStyle(message.value === true);
             }
@@ -1454,6 +1502,9 @@
             console.log('Clearing session selectors');
             sessionHiddenSelectors.length = 0; // Clear the array
             sendResponse({ success: true });
+        } else if (message.type === 'hasActiveRule') {
+            siteHasActiveRule(active => sendResponse({ active }));
+            return true; // async response
         }
     });
 
@@ -1563,6 +1614,7 @@
         });
 
         maybeRedirectFromStorage();
+        reportIfRuleActive();
     }
 
 })();

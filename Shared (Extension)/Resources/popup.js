@@ -2729,6 +2729,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            // Usage count fallback: on some iOS versions a content script's
+            // message does not wake the background, so the popup asks too.
+            chrome.tabs.sendMessage(tab[0].id, { type: 'hasActiveRule' }, function (response) {
+                if (chrome.runtime.lastError || !response || !response.active) return;
+                chrome.runtime.sendMessage({ type: 'usagePing', url: tab[0].url }, function () { void chrome.runtime.lastError; });
+            });
+
             const currentHost = currentURL.hostname;
             currentPageHostname = currentHost;
             const displayHost = currentHost.replace(/^www\./, '');
