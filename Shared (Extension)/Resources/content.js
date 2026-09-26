@@ -1295,10 +1295,11 @@
                                                 lastAppliedSettings[item] = "visible";
                                             }
                                         } else if (item === "redditFeed") {
-                                            // Only hide feed on home page, not on subreddits or other pages
+                                            // Hide global feeds (including Best/Top), but not subreddit feeds.
                                             let isHomePage = window.location.pathname === '/' ||
                                                 window.location.pathname.startsWith('/r/popular') ||
-                                                (window.location.pathname === '/' && window.location.search.includes('feed=home'));
+                                                (window.location.pathname === '/' && window.location.search.includes('feed=home')) ||
+                                                /^\/(?:best|top)(?:\/|$)/.test(window.location.pathname);
 
                                             if (statusValue === true) {
                                                 // User wants feed hidden
@@ -1561,10 +1562,11 @@
                                     lastAppliedSettings[item] = "visible";
                                 }
                             } else if (item === "redditFeed") {
-                                // Only hide feed on home page, not on subreddits or other pages
+                                // Hide global feeds (including Best/Top), but not subreddit feeds.
                                 let isHomePage = window.location.pathname === '/' ||
                                     window.location.pathname.startsWith('/r/popular') ||
-                                    (window.location.pathname === '/' && window.location.search.includes('feed=home'));
+                                    (window.location.pathname === '/' && window.location.search.includes('feed=home')) ||
+                                    /^\/(?:best|top)(?:\/|$)/.test(window.location.pathname);
 
                                 if (statusValue === true) {
                                     // User wants feed hidden
