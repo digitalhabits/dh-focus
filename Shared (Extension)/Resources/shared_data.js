@@ -28,7 +28,7 @@ const platformHostnames = {
 // Shared list of all predefined elements that can be hidden across all targeted platforms.
 const elementsThatCanBeHidden = [
     // YouTube
-    "youtubeSearch", "youtubeSearchPredict", "youtubeRecVids", "youtubeThumbnails", "youtubeNotifications", "youtubeProfileImg",
+    "youtubeSearch", "youtubeSearchPredict", "youtubeRecVids", "youtubePlayables", "youtubeThumbnails", "youtubeNotifications", "youtubeProfileImg",
     "youtubeShorts", "youtubeSubscriptions", "youtubeYou", "youtubeHistory", "youtubeExplore", "youtubeMore",
     "youtubeRelated", /* "youtubeSidebar", */ "youtubeComments", "youtubeViews", "youtubeLikes", "youtubeSubscribers",
     // X (Twitter)
