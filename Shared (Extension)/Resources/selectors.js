@@ -8,7 +8,7 @@
 const cssSelectors = {
     // YouTube
     youtubeSearchCssOn: '',
-    youtubeSearchCssOff: '#center > yt-searchbox.ytSearchboxComponentHost.ytSearchboxComponentDesktop.ytd-masthead, ytd-searchbox { display: none; } /* m.youtube.com */ button.icon-button.topbar-menu-button-avatar-button[aria-label="Search YouTube"] { display: none !important; }',
+    youtubeSearchCssOff: '#center > yt-searchbox.ytSearchboxComponentHost.ytSearchboxComponentDesktop.ytd-masthead, ytd-searchbox, #voice-search-button { display: none; } /* m.youtube.com */ button.icon-button.topbar-menu-button-avatar-button[aria-label="Search YouTube"] { display: none !important; }',
     youtubeSearchPredictCssOn: '',
     youtubeSearchPredictCssOff: 'div[role="listbox"].ytSearchboxComponentSuggestionsContainer, div.gstl_50 { display: none !important; }',
     youtubeRecVidsCssOn: 'ytd-browse[page-subtype="home"] { visibility: visible !important; } div[tab-identifier="FEwhat_to_watch"] { visibility: visible !important; }',
