@@ -15,3 +15,6 @@ store-packages-*/
 .env.submit
 .env.submit*
 .env.submit.backup-*
+
+# Store slides: made by scripts/focus-store-assets.mjs, kept in the shared Drive
+store-listing/screenshots/
