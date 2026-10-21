@@ -131,8 +131,8 @@ const cssSelectors = {
     whatsappArchivedCssOff: 'button[data-testid="chatlist-panel-archived-button"] { display: none !important; }',
     whatsappProfilePicturesCssOn: '[role="row"] [data-testid="cell-frame-container"] > div:first-child, [role="row"] [data-testid="message-yourself-row"] > div:first-child, div[title="Profile details"] div.x1n2onr6.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p { display: flex !important; }',
     whatsappProfilePicturesCssOff: '[role="row"] [data-testid="cell-frame-container"] > div:first-child, [role="row"] [data-testid="message-yourself-row"] > div:first-child, div[title="Profile details"] div.x1n2onr6.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p { display: none !important; }',
-    whatsappNotificationPromptCssOn: 'span.x78zum5.x1c4vz4f.x2lah0s.xdl72j9.xdt5ytf { display: block !important; }',
-    whatsappNotificationPromptCssOff: 'span.x78zum5.x1c4vz4f.x2lah0s.xdl72j9.xdt5ytf { display: none !important; }',
+    whatsappNotificationPromptCssOn: 'span[data-testid="chat-butterbar"] { display: flex !important; }',
+    whatsappNotificationPromptCssOff: 'span[data-testid="chat-butterbar"] { display: none !important; }',
 
     // Google
     googleBackgroundCssOn: '#tads, #atvcap .ptJHdc.yY236b.c3mZkd, [data-st-tgt="atvcap"] > div, #tads .CnP9N.U3A9Ac.irmCpc,.commercial-unit-mobile-top,.commercial-unit-mobile-top .v7hl4d,.commercial-unit-mobile-bottom .v7hl4d, .baPFxb.kSMK2.wHYlTd:has(g-tray-header), .baPFxb.kSMK2.wHYlTd:has(g-tray-header) g-card {background-color: transparent !important;}',
