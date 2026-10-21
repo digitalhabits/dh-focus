@@ -144,8 +144,8 @@ const cssSelectors = {
     // Reddit
     redditFeedCssOn: 'shreddit-feed { display: block !important; }',
     redditFeedCssOff: 'shreddit-feed { display: none !important; }',
-    redditPopularCssOn: 'a[href="/r/popular/"] { display: flex !important; }',
-    redditPopularCssOff: 'a[href="/r/popular/"] { display: none !important; }',
+    redditPopularCssOn: 'a[href="/r/popular/"], a[href$="reddit.com/r/popular/"] { display: flex !important; }',
+    redditPopularCssOff: '/* the whole sidebar row, so no gap is left; the link is now an absolute URL */ faceplate-tracker[noun="popular"], li#popular-posts, a[href="/r/popular/"], a[href$="reddit.com/r/popular/"] { display: none !important; }',
     redditRecentCssOn: 'reddit-recent-pages, div#recent-communities-section, faceplate-expandable-section-helper#recent-communities-section { display: block !important; }',
     redditRecentCssOff: 'reddit-recent-pages, div#recent-communities-section, faceplate-expandable-section-helper#recent-communities-section { display: none !important; }',
     redditCommunitiesCssOn: '[aria-controls="communities_section"] + faceplate-auto-height-animator { display: block !important; } [aria-controls="communities_section"] { display: flex !important; }',
