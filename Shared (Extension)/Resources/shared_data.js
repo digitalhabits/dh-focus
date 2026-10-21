@@ -34,7 +34,7 @@ const elementsThatCanBeHidden = [
     // X (Twitter)
     "xExplore", "xNotifications", "xNews", "xTrends", "xFollow", "xTimeline",
     // Facebook
-    "facebookStories", "facebookReels", "facebookSuggestedFollows", "facebookFeed", "facebookContacts", "facebookGroupChats", "facebookNotifications", "facebookNotificationBadges", "facebookOpenApp",
+    "facebookStories", "facebookReels", "facebookSuggestedFollows", "facebookSuggestedGroups", "facebookFeed", "facebookContacts", "facebookGroupChats", "facebookNotifications", "facebookNotificationBadges", "facebookOpenApp",
     // LinkedIn
     "linkedinNews", "linkedinNotifications", "linkedinFeed",
     // Instagram
