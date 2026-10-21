@@ -129,8 +129,8 @@ const cssSelectors = {
     whatsappCommunitiesCssOff: 'div:has(> span button[data-navbar-item][aria-label="Communities"]), div:has(> span > button[aria-label="Communities"]) { display: none !important; }',
     whatsappArchivedCssOn: 'button[data-testid="chatlist-panel-archived-button"] { display: flex !important; }',
     whatsappArchivedCssOff: 'button[data-testid="chatlist-panel-archived-button"] { display: none !important; }',
-    whatsappProfilePicturesCssOn: 'div._ak8n div.x1n2onr6.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p, div[title="Profile details"] div.x1n2onr6.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p { display: flex !important; }',
-    whatsappProfilePicturesCssOff: 'div._ak8n div.x1n2onr6.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p, div[title="Profile details"] div.x1n2onr6.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p { display: none !important; }',
+    whatsappProfilePicturesCssOn: '[role="row"] [data-testid="cell-frame-container"] > div:first-child, [role="row"] [data-testid="message-yourself-row"] > div:first-child, div[title="Profile details"] div.x1n2onr6.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p { display: flex !important; }',
+    whatsappProfilePicturesCssOff: '[role="row"] [data-testid="cell-frame-container"] > div:first-child, [role="row"] [data-testid="message-yourself-row"] > div:first-child, div[title="Profile details"] div.x1n2onr6.x1c9tyrk.xeusxvb.x1pahc9y.x1ertn4p { display: none !important; }',
     whatsappNotificationPromptCssOn: 'span.x78zum5.x1c4vz4f.x2lah0s.xdl72j9.xdt5ytf { display: block !important; }',
     whatsappNotificationPromptCssOff: 'span.x78zum5.x1c4vz4f.x2lah0s.xdl72j9.xdt5ytf { display: none !important; }',
 
