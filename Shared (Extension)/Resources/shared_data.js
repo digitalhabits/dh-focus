@@ -32,7 +32,7 @@ const elementsThatCanBeHidden = [
     "youtubeShorts", "youtubeSubscriptions", "youtubeYou", "youtubeHistory", "youtubeExplore", "youtubeMore",
     "youtubeRelated", /* "youtubeSidebar", */ "youtubeComments", "youtubeViews", "youtubeLikes", "youtubeSubscribers",
     // X (Twitter)
-    "xExplore", "xNotifications", "xNews", "xTrends", "xFollow", "xTimeline",
+    "xExplore", "xNotifications", "xGrok", "xNews", "xTrends", "xFollow", "xTimeline",
     // Facebook
     "facebookStories", "facebookReels", "facebookSuggestedFollows", "facebookSuggestedGroups", "facebookFeed", "facebookContacts", "facebookGroupChats", "facebookNotifications", "facebookNotificationBadges", "facebookOpenApp",
     // LinkedIn
