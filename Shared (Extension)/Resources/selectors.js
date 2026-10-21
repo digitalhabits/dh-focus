@@ -119,8 +119,8 @@ const cssSelectors = {
     linkedinNewsCssOff: '#feed-news-module, .feed-follows-module, div:has(> div > button[aria-label="Info tooltip"]):has(a[href*="/news/story/"]), div:has(> div > div > div > div > button[aria-label="Info tooltip"]):has(a[href*="/news/story/"]) { display: none !important; }',
 
     // WhatsApp
-    whatsappPreviewCssOn: 'div._ak8k { display: block !important; }',
-    whatsappPreviewCssOff: 'div._ak8k { display: none !important; }',
+    whatsappPreviewCssOn: 'span[data-testid="last-msg-status"] { display: flex !important; }',
+    whatsappPreviewCssOff: 'span[data-testid="last-msg-status"] { display: none !important; }',
     whatsappStatusCssOn: 'div:has(> span button[data-navbar-item][aria-label="Status"]), div:has(> span > button[aria-label="Status"]) { display: block !important; }',
     whatsappStatusCssOff: 'div:has(> span button[data-navbar-item][aria-label="Status"]), div:has(> span > button[aria-label="Status"]) { display: none !important; }',
     whatsappChannelsCssOn: 'div:has(> span button[data-navbar-item][aria-label="Channels"]), div:has(> span > button[aria-label="Channels"]) { display: block !important; }',
