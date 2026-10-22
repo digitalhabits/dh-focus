@@ -599,7 +599,26 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        /** While settings are locked, a ticked pick can't be unticked or removed; only its name can change. */
+        function isPickLocked(enabled) {
+            return isSettingsLocked && enabled;
+        }
+
+        function updatePickLockUI() {
+            document.querySelectorAll('.custom-elements .a-toggle.custom-element').forEach(function (row) {
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                const removeButton = row.querySelector('.remove-symbol');
+                const locked = isPickLocked(!!(checkbox && checkbox.checked));
+                row.classList.toggle('lock-protected', locked);
+                if (removeButton) {
+                    removeButton.disabled = locked;
+                    removeButton.title = locked ? 'Locked while settings are locked' : 'Remove';
+                }
+            });
+        }
+
         function updateLockProtectedUI() {
+            updatePickLockUI();
             if (currentPlatform) {
                 elementsThatCanBeHidden.filter(e => e.startsWith(currentPlatform)).forEach(function (item) {
                     const toggleEl = document.getElementById(item + 'Toggle');
@@ -1343,53 +1362,74 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function setupPlatformSwitchListener() { /* removed */ }
 
+        // Shared add/edit dialog: a floating card on desktop and iPad, a full-screen sheet on iPhone (see popup.css).
+        const CSS_SELECTOR_HELP_URL = 'https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics';
+
         function showEditDialog(siteIdentifier, selector, name, onSave, options) {
             options = options || {};
-            const dialogTitle = options.title || 'Edit Custom Element';
+            const dialogTitle = options.title || 'Edit pick';
             const saveLabel = options.saveLabel || 'Save';
+            const showRemove = typeof options.onRemove === 'function' && !options.selectorLocked;
 
-            // Full-bleed panel (same pattern as settings #faq-dropdown)
             const overlay = document.createElement('div');
             overlay.className = 'edit-panel-overlay';
             overlay.setAttribute('role', 'dialog');
             overlay.setAttribute('aria-modal', 'true');
+            overlay.setAttribute('aria-labelledby', 'edit-dialog-title');
 
             overlay.innerHTML = `
-                <div class="edit-dialog-scroll">
-                    <div class="edit-dialog-header">
-                        <h3 id="edit-dialog-title">${dialogTitle}</h3>
-                    </div>
-                    <div class="edit-dialog-field">
-                        <label for="element-name">Name (optional)</label>
-                        <input type="text" id="element-name" class="shadcn-input" placeholder="e.g., Reels button" value="${name || ''}">
-                    </div>
-                    <div class="edit-dialog-field">
-                        <label for="element-selector">
-                            CSS Selector
-                            <a href="https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics" target="_blank" rel="noopener noreferrer" class="help-icon" aria-label="Learn about CSS selectors from Mozilla">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                <div class="edit-dialog-card">
+                    <div class="edit-dialog-scroll">
+                        <div class="edit-dialog-header">
+                            <h3 id="edit-dialog-title">${dialogTitle}</h3>
+                            ${showRemove ? `<button type="button" class="edit-dialog-trash" title="Remove" aria-label="Remove">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
                                 </svg>
+                            </button>` : ''}
+                        </div>
+                        <div class="edit-dialog-field">
+                            <label for="element-name">Name</label>
+                            <input type="text" id="element-name" class="shadcn-input" placeholder="e.g., Reels button">
+                        </div>
+                        <div class="edit-dialog-field">
+                            <label for="element-selector">
+                                Selector
+                                <button type="button" class="help-icon" aria-label="About CSS selectors" aria-expanded="false">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                    </svg>
+                                </button>
                                 <span class="help-icon-tooltip" role="tooltip">
-                                    Click to learn about CSS selectors<br>from Mozilla
+                                    Learn about CSS selectors<br>from <a href="${CSS_SELECTOR_HELP_URL}" target="_blank" rel="noopener noreferrer">Mozilla</a>
                                 </span>
-                            </a>
-                        </label>
-                        <textarea id="element-selector" class="shadcn-input" rows="3" placeholder="e.g., div.class-name">${selector}</textarea>
+                            </label>
+                            <textarea id="element-selector" class="shadcn-input" rows="3" spellcheck="false" placeholder="e.g., div.class-name"${options.selectorLocked ? ' readonly' : ''}></textarea>
+                            <p class="edit-dialog-hint">Without a name, the list shows the selector.</p>${options.selectorLocked ? `
+                            <p class="edit-dialog-note">Settings are locked, so only the name can change.</p>` : ''}
+                        </div>
                     </div>
-                </div>
-                <div class="edit-dialog-buttons">
-                    <button type="button" id="cancel-edit" class="secondary-btn">Cancel</button>
-                    <button type="button" id="save-edit" class="primary-btn">${saveLabel}</button>
+                    <div class="edit-dialog-buttons">
+                        ${showRemove ? '<button type="button" id="remove-edit" class="edit-dialog-remove">Remove</button>' : ''}
+                        <div class="edit-dialog-buttons-right">
+                            <button type="button" id="cancel-edit" class="secondary-btn">Cancel</button>
+                            <button type="button" id="save-edit" class="primary-btn">${saveLabel}</button>
+                        </div>
+                    </div>
                 </div>
             `;
-            overlay.setAttribute('aria-labelledby', 'edit-dialog-title');
 
             document.body.appendChild(overlay);
             document.body.classList.add('modal-open');
-            document.body.style.minHeight = '350px';
+            // On iOS the popup is a sheet: leave its size alone (no forced height, no autofocus below),
+            // or Safari expands it to full height.
+            const isIosSheet = /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            if (!isIosSheet) document.body.style.minHeight = '350px';
 
             const titleEl = overlay.querySelector('#edit-dialog-title');
             if (titleEl) titleEl.tabIndex = -1;
@@ -1397,16 +1437,37 @@ document.addEventListener('DOMContentLoaded', function () {
                 el.tabIndex = -1;
             });
 
+            // Help icon: on touch screens a tap shows or hides the tooltip (its link opens the page);
+            // with a mouse the tooltip shows on hover and a click opens the page.
+            const helpIcon = overlay.querySelector('.help-icon');
+            const helpTooltip = overlay.querySelector('.help-icon-tooltip');
+            if (helpIcon && helpTooltip) {
+                helpIcon.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    if (window.matchMedia('(hover: none)').matches) {
+                        const open = !helpTooltip.classList.contains('is-open');
+                        helpTooltip.classList.toggle('is-open', open);
+                        helpIcon.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    } else {
+                        window.open(CSS_SELECTOR_HELP_URL, '_blank', 'noopener');
+                    }
+                });
+            }
+
             const nameInput = overlay.querySelector('#element-name');
             const selectorInput = overlay.querySelector('#element-selector');
+            const removeBtn = overlay.querySelector('#remove-edit');
             const cancelBtn = overlay.querySelector('#cancel-edit');
             const saveBtn = overlay.querySelector('#save-edit');
-            [nameInput, selectorInput, cancelBtn, saveBtn].forEach(function (el, index) {
-                if (el) el.tabIndex = index + 1;
+            // Values set as properties so quotes or markup in a name/selector can't break the HTML
+            nameInput.value = name || '';
+            selectorInput.value = selector || '';
+            [nameInput, selectorInput, removeBtn, cancelBtn, saveBtn].filter(Boolean).forEach(function (el, index) {
+                el.tabIndex = index + 1;
             });
 
             // Focus the selector field when adding manually, otherwise the name input
-            setTimeout(() => {
+            if (!isIosSheet) setTimeout(() => {
                 const fieldToFocus = options.focusSelector ? selectorInput : nameInput;
                 if (fieldToFocus) {
                     fieldToFocus.focus();
@@ -1432,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Handle save
             saveBtn.addEventListener('click', function () {
                 const newName = nameInput.value.trim();
-                const newSelector = selectorInput.value.trim();
+                const newSelector = options.selectorLocked ? selector : selectorInput.value.trim();
 
                 if (!newSelector) {
                     alert('CSS Selector cannot be empty');
@@ -1450,9 +1511,88 @@ document.addEventListener('DOMContentLoaded', function () {
                 closeDialog();
             });
 
+            // Remove: a text button in the footer on desktop, the bin icon by the title on iPhone (CSS picks one)
+            overlay.querySelectorAll('#remove-edit, .edit-dialog-trash').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    options.onRemove();
+                    closeDialog();
+                });
+            });
+
             // Handle cancel
             cancelBtn.addEventListener('click', closeDialog);
         }
+
+        // Remove a pick from storage and from the page's session, then redraw the list.
+        function removePick(siteIdentifier, selector) {
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                if (!tabs || !tabs[0]) return;
+
+                // First remove from storage
+                const storageKey = `${siteIdentifier}CustomHiddenElements`;
+                chrome.storage.sync.get(storageKey, function (result) {
+                    let currentSelectors = result[storageKey] || [];
+                    currentSelectors = currentSelectors.filter(s =>
+                        (typeof s === 'string' ? s : s.selector) !== selector
+                    );
+
+                    chrome.storage.sync.set({ [storageKey]: currentSelectors }, function () {
+                        // Then remove from session memory and reapply styles
+                        chrome.tabs.sendMessage(tabs[0].id, {
+                            type: 'removeSessionSelector',
+                            selector: selector
+                        }, function (response) {
+                            // Use the fresh response from content script
+                            if (response && response.customSelectors) {
+                                updateCustomElementsList(siteIdentifier, response.customSelectors);
+                            } else {
+                                // Fallback to just storage
+                                updateCustomElementsList(siteIdentifier, currentSelectors);
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
+        // A pick is on unless it was switched off (older picks are plain strings).
+        const pickLoadingUntil = new Map(); // pick -> when its tick animation ends
+
+        function isPickEnabled(item) {
+            return typeof item === 'string' || item.enabled !== false;
+        }
+
+        function withPickEnabled(item, enabled) {
+            const pick = typeof item === 'string' ? { name: '', selector: item } : { name: item.name || '', selector: item.selector };
+            if (!enabled) pick.enabled = false;
+            return pick;
+        }
+
+        // Tick or untick a pick: saved picks change in storage (the page follows the
+        // storage change), picks only in this page's session change on the page.
+        function setPickEnabled(siteIdentifier, selector, enabled) {
+            const storageKey = `${siteIdentifier}CustomHiddenElements`;
+            chrome.storage.sync.get(storageKey, function (result) {
+                const saved = Array.isArray(result[storageKey]) ? result[storageKey] : [];
+                const index = saved.findIndex(s => (typeof s === 'string' ? s : s.selector) === selector);
+                if (index !== -1) {
+                    saved[index] = withPickEnabled(saved[index], enabled);
+                    chrome.storage.sync.set({ [storageKey]: saved });
+                    return;
+                }
+                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                    if (!tabs || !tabs[0]) return;
+                    chrome.tabs.sendMessage(tabs[0].id, { type: 'setSessionSelectorEnabled', selector: selector, enabled: enabled }, function (response) {
+                        void chrome.runtime.lastError;
+                        if (response && response.customSelectors) updateCustomElementsList(siteIdentifier, response.customSelectors);
+                    });
+                });
+            });
+        }
+
+        // Picks lists show the first few; which sites are expanded lasts while the popup is open.
+        const PICKS_COLLAPSED_COUNT = 4;
+        const expandedPickLists = new Set();
 
         function updateCustomElementsList(siteIdentifier, selectors) {
             console.log('updateCustomElementsList called for', siteIdentifier, 'with selectors:', selectors);
@@ -1463,13 +1603,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             container.innerHTML = '';
+            container.classList.add('hide-checkboxes');
 
             if (!Array.isArray(selectors)) {
                 console.warn("Selectors is not an array for", siteIdentifier, selectors);
                 selectors = [];
             }
 
-            selectors.forEach(item => {
+            selectors.forEach((item, index) => {
                 // Support both old format (string) and new format (object with name and selector)
                 let selector, name;
                 if (typeof item === 'string') {
@@ -1479,13 +1620,38 @@ document.addEventListener('DOMContentLoaded', function () {
                     selector = item.selector || item;
                     name = item.name || '';
                 }
+                const enabled = isPickEnabled(item);
 
+                // Same tick box as the built-in options: ticked = hidden
                 const div = document.createElement('div');
-                div.className = 'custom-element';
+                div.className = 'a-toggle custom-element';
 
-                const span = document.createElement('span');
-                span.textContent = name || selector;
-                span.title = selector;
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `${containerId}Pick${index}`;
+                checkbox.checked = enabled;
+                // Same ~800ms tick animation as the built-in options; it carries over the redraw a save causes.
+                const loadingKey = containerId + '\n' + selector;
+                const loadingLeft = (pickLoadingUntil.get(loadingKey) || 0) - Date.now();
+                if (loadingLeft > 0) {
+                    checkbox.classList.add('loading');
+                    setTimeout(() => checkbox.classList.remove('loading'), loadingLeft);
+                }
+                checkbox.addEventListener('change', function () {
+                    if (isSettingsLocked && !checkbox.checked) {
+                        checkbox.checked = true;
+                        return;
+                    }
+                    pickLoadingUntil.set(loadingKey, Date.now() + 800);
+                    checkbox.classList.add('loading');
+                    setTimeout(() => checkbox.classList.remove('loading'), 800);
+                    setPickEnabled(siteIdentifier, selector, checkbox.checked);
+                });
+
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = name || selector;
+                label.title = selector;
 
                 const buttonsContainer = document.createElement('div');
                 buttonsContainer.className = 'custom-element-buttons';
@@ -1499,6 +1665,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </svg>`;
                 editButton.title = 'Edit';
                 editButton.addEventListener('click', function () {
+                    const selectorLocked = isPickLocked(checkbox.checked);
                     showEditDialog(siteIdentifier, selector, name, function (newName, newSelector) {
                         // Always edit in BOTH session AND storage (in case data exists in either)
                         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -1520,8 +1687,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     );
 
                                     if (index !== -1) {
-                                        // Selector was in storage, update it
-                                        currentSelectors[index] = { name: newName, selector: newSelector };
+                                        // Selector was in storage, update it (keeping whether it is on)
+                                        currentSelectors[index] = withPickEnabled({ name: newName, selector: newSelector }, isPickEnabled(currentSelectors[index]));
                                         chrome.storage.sync.set({ [storageKey]: currentSelectors }, function () {
                                             // Merge storage with any session selectors
                                             const sessionSelectors = (response && response.customSelectors) || [];
@@ -1541,7 +1708,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 });
                             });
                         });
-                    });
+                    }, { selectorLocked: selectorLocked, onRemove: function () { removePick(siteIdentifier, selector); } });
                 });
 
                 // Remove button
@@ -1554,46 +1721,39 @@ document.addEventListener('DOMContentLoaded', function () {
                     </svg>`;
                 removeButton.title = 'Remove';
                 removeButton.addEventListener('click', function () {
-                    // Always remove from BOTH session AND storage (in case data exists in either)
-                    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                        if (!tabs || !tabs[0]) return;
-
-                        // First remove from storage
-                        const storageKey = `${siteIdentifier}CustomHiddenElements`;
-                        chrome.storage.sync.get(storageKey, function (result) {
-                            let currentSelectors = result[storageKey] || [];
-                            currentSelectors = currentSelectors.filter(s =>
-                                (typeof s === 'string' ? s : s.selector) !== selector
-                            );
-
-                            chrome.storage.sync.set({ [storageKey]: currentSelectors }, function () {
-                                // Then remove from session memory and reapply styles
-                                chrome.tabs.sendMessage(tabs[0].id, {
-                                    type: 'removeSessionSelector',
-                                    selector: selector
-                                }, function (response) {
-                                    // Use the fresh response from content script
-                                    if (response && response.customSelectors) {
-                                        updateCustomElementsList(siteIdentifier, response.customSelectors);
-                                    } else {
-                                        // Fallback to just storage
-                                        updateCustomElementsList(siteIdentifier, currentSelectors);
-                                    }
-                                });
-                            });
-                        });
-                    });
+                    if (isPickLocked(checkbox.checked)) return;
+                    removePick(siteIdentifier, selector);
                 });
 
                 buttonsContainer.appendChild(editButton);
                 buttonsContainer.appendChild(removeButton);
+                div.appendChild(checkbox);
+                div.appendChild(label);
                 div.appendChild(buttonsContainer);
-                div.appendChild(span);
 
+                if (index >= PICKS_COLLAPSED_COUNT && !expandedPickLists.has(containerId)) div.hidden = true;
                 container.appendChild(div);
             });
 
+            const extraPicks = selectors.length - PICKS_COLLAPSED_COUNT;
+            if (extraPicks > 0) {
+                const expanded = expandedPickLists.has(containerId);
+                const moreButton = document.createElement('button');
+                moreButton.type = 'button';
+                moreButton.className = 'picks-show-more';
+                moreButton.textContent = expanded ? 'Show less' : `Show ${extraPicks} more`;
+                moreButton.setAttribute('aria-expanded', String(expanded));
+                moreButton.addEventListener('click', function () {
+                    expanded ? expandedPickLists.delete(containerId) : expandedPickLists.add(containerId);
+                    updateCustomElementsList(siteIdentifier, selectors);
+                    const again = container.querySelector('.picks-show-more');
+                    if (again) again.focus();
+                });
+                container.appendChild(moreButton);
+            }
+
             console.log('Updated container content for', containerId, ':', container.innerHTML);
+            updatePickLockUI();
             setupPopupTabOrder();
         }
 

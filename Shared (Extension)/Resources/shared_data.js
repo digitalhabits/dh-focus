@@ -28,13 +28,13 @@ const platformHostnames = {
 // Shared list of all predefined elements that can be hidden across all targeted platforms.
 const elementsThatCanBeHidden = [
     // YouTube
-    "youtubeSearch", "youtubeSearchPredict", "youtubeRecVids", "youtubeThumbnails", "youtubeNotifications", "youtubeProfileImg",
+    "youtubeSearch", "youtubeSearchPredict", "youtubeRecVids", "youtubePlayables", "youtubeExploreTopics","youtubeThumbnails", "youtubeNotifications", "youtubeProfileImg",
     "youtubeShorts", "youtubeSubscriptions", "youtubeYou", "youtubeHistory", "youtubeExplore", "youtubeMore",
     "youtubeRelated", /* "youtubeSidebar", */ "youtubeComments", "youtubeViews", "youtubeLikes", "youtubeSubscribers",
     // X (Twitter)
-    "xExplore", "xNotifications", "xNews", "xTrends", "xFollow", "xTimeline",
+    "xExplore", "xNotifications", "xGrok", "xNews", "xTrends", "xFollow", "xTimeline",
     // Facebook
-    "facebookStories", "facebookReels", "facebookSuggestedFollows", "facebookFeed", "facebookContacts", "facebookGroupChats", "facebookNotifications", "facebookNotificationBadges", "facebookOpenApp",
+    "facebookStories", "facebookReels", "facebookSuggestedFollows", "facebookSuggestedGroups", "facebookFeed", "facebookContacts", "facebookGroupChats", "facebookNotifications", "facebookNotificationBadges", "facebookOpenApp",
     // LinkedIn
     "linkedinNews", "linkedinNotifications", "linkedinFeed",
     // Instagram

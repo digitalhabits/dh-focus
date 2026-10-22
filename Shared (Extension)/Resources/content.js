@@ -365,7 +365,7 @@
                 let customSelectors = result[customStorageKey] || [];
                 if (!Array.isArray(customSelectors)) customSelectors = [];
                 const rememberEnabled = result[rememberKey] !== false;
-                const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
+                const merged = mergeWithSession(customSelectors);
                 // Undo only reverses picks made since this page loaded, so offer it only then.
                 updateFeedbackMessage('Click element to hide it', sessionHiddenSelectors.length > 0, merged.length, !rememberEnabled);
             });
@@ -551,6 +551,17 @@
                 handleUndo();
             });
             feedbackContainer.appendChild(undoButton);
+            // While settings are locked a pick can't be undone, so show Undo greyed out and disabled.
+            if (currentSiteIdentifier) {
+                chrome.storage.sync.get(`${currentSiteIdentifier}SettingsLocked`, function (result) {
+                    if (result[`${currentSiteIdentifier}SettingsLocked`] !== true) return;
+                    undoButton.disabled = true;
+                    undoButton.title = 'Settings are locked';
+                    undoButton.style.opacity = '0.45';
+                    undoButton.style.cursor = 'not-allowed';
+                    undoButton.style.pointerEvents = 'none';
+                });
+            }
         }
 
         const doneButton = document.createElement('button');
@@ -580,9 +591,15 @@
         if (sessionHiddenSelectors.length === 0 || !currentSiteIdentifier) return;
         const customStorageKey = `${currentSiteIdentifier}CustomHiddenElements`;
         const rememberKey = `${currentSiteIdentifier}RememberSettings`;
-        chrome.storage.sync.get([customStorageKey, rememberKey], function (result) {
+        const lockKey = `${currentSiteIdentifier}SettingsLocked`;
+        chrome.storage.sync.get([customStorageKey, rememberKey, lockKey], function (result) {
             let customSelectors = result[customStorageKey] || [];
             if (!Array.isArray(customSelectors)) customSelectors = [];
+            if (result[lockKey] === true) {
+                const merged = mergeWithSession(customSelectors);
+                updateFeedbackMessage('Settings are locked', false, merged.length, result[rememberKey] === false);
+                return;
+            }
             const selectorToRemove = sessionHiddenSelectors.pop();
             const rememberEnabled = result[rememberKey] !== false; // default true
 
@@ -594,13 +611,13 @@
                         console.error("Error removing custom selector from storage:", chrome.runtime.lastError);
                     }
                     // Reapply merged (persistent + remaining session)
-                    const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
+                    const merged = mergeWithSession(customSelectors);
                     applyCustomElementStyles(currentSiteIdentifier, merged);
                     updateFeedbackMessage('Click element to hide it', sessionHiddenSelectors.length > 0, merged.length, false);
                 });
             } else {
                 // Session-only: just reapply merged without touching storage
-                const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
+                const merged = mergeWithSession(customSelectors);
                 applyCustomElementStyles(currentSiteIdentifier, merged);
                 updateFeedbackMessage('Click element to hide it', sessionHiddenSelectors.length > 0, merged.length, true);
                 // Notify popup that session selectors changed
@@ -780,7 +797,7 @@
             const rememberEnabled = result[rememberKey] !== false; // default true
             const alreadyHas = customSelectors.includes(selector) || sessionHiddenSelectors.includes(selector);
             if (alreadyHas) {
-                const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
+                const merged = mergeWithSession(customSelectors);
                 updateFeedbackMessage('Element already hidden', sessionHiddenSelectors.length > 0, merged.length, !rememberEnabled);
                 return;
             }
@@ -794,13 +811,13 @@
                         console.error("Error saving custom selectors:", chrome.runtime.lastError);
                     }
                     // Apply merged to ensure immediate effect
-                    const merged = Array.from(new Set([...toSave, ...sessionHiddenSelectors]));
+                    const merged = mergeWithSession(toSave);
                     applyCustomElementStyles(currentSiteIdentifier, merged);
                     updateFeedbackMessage('Element hidden', true, merged.length, false);
                 });
             } else {
                 // Session only — apply without saving
-                const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
+                const merged = mergeWithSession(customSelectors);
                 applyCustomElementStyles(currentSiteIdentifier, merged);
                 updateFeedbackMessage('Element hidden', true, merged.length, true);
                 // Notify popup that session selectors changed
@@ -1136,10 +1153,24 @@
         });
     }
 
+    // A pick is on unless the popup switched it off (older picks are plain strings).
+    function isPickEnabled(item) {
+        return typeof item === 'string' || item.enabled !== false;
+    }
+
+    // Saved picks plus this page's session picks; a saved pick wins over a session copy of the same selector
+    // (so switching a saved pick off in the popup isn't undone by the plain copy kept since it was picked).
+    function mergeWithSession(saved) {
+        const selectorOf = s => (typeof s === 'string' ? s : s.selector);
+        const savedSelectors = new Set(saved.map(selectorOf));
+        return [...saved, ...sessionHiddenSelectors.filter(s => !savedSelectors.has(selectorOf(s)))];
+    }
+
     function applyCustomElementStyles(siteIdentifier, selectors) {
         const styleId = `customHidden_${siteIdentifier.replace(/\./g, '_')}Style`;
         // Support both old format (string) and new format (object with name and selector)
-        const css = selectors.length > 0 ? selectors.map(item => {
+        const active = selectors.filter(isPickEnabled);
+        const css = active.length > 0 ? active.map(item => {
             const selector = typeof item === 'string' ? item : (item.selector || item);
             return `${selector} { display: none !important; }`;
         }).join('\n') : '';
@@ -1178,7 +1209,7 @@
                 return item === 'youtubeThumbnails' ? !!status && status !== 'On' : status === true;
             });
             const custom = result[`${site}CustomHiddenElements`];
-            callback(hideOn || sessionHiddenSelectors.length > 0 || (Array.isArray(custom) && custom.length > 0) ||
+            callback(hideOn || sessionHiddenSelectors.some(isPickEnabled) || (Array.isArray(custom) && custom.some(isPickEnabled)) ||
                 value(result, `${site}GrayscaleStatus`) === true || value(result, `${site}AccessDelayStatus`) === true ||
                 !!redirectTargetFrom(result));
         });
@@ -1295,10 +1326,11 @@
                                                 lastAppliedSettings[item] = "visible";
                                             }
                                         } else if (item === "redditFeed") {
-                                            // Only hide feed on home page, not on subreddits or other pages
+                                            // Hide global feeds (including the Best/Hot/New/Top/Rising sorts), but not subreddit feeds.
                                             let isHomePage = window.location.pathname === '/' ||
                                                 window.location.pathname.startsWith('/r/popular') ||
-                                                (window.location.pathname === '/' && window.location.search.includes('feed=home'));
+                                                (window.location.pathname === '/' && window.location.search.includes('feed=home')) ||
+                                                /^\/(?:best|hot|new|top|rising)(?:\/|$)/.test(window.location.pathname);
 
                                             if (statusValue === true) {
                                                 // User wants feed hidden
@@ -1335,7 +1367,7 @@
                 let customSelectors = result[customStorageKey] || [];
                 if (!Array.isArray(customSelectors)) customSelectors = [];
                 // Merge session-only selectors for this page
-                const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
+                const merged = mergeWithSession(customSelectors);
                 // Check if custom elements have changed
                 const currentCustomElements = lastAppliedCustomElements[currentSiteIdentifier] || [];
                 if (JSON.stringify(merged) !== JSON.stringify(currentCustomElements)) {
@@ -1433,7 +1465,7 @@
             chrome.storage.sync.get(customKey, function (result) {
                 let baseSelectors = result[customKey] || [];
                 if (!Array.isArray(baseSelectors)) baseSelectors = [];
-                const mergedSelectors = Array.from(new Set([...baseSelectors, ...sessionHiddenSelectors]));
+                const mergedSelectors = mergeWithSession(baseSelectors);
                 sendResponse({ overrides: sessionOverrides, customSelectors: mergedSelectors });
             });
             return true; // async response
@@ -1452,10 +1484,31 @@
             chrome.storage.sync.get(customKey, function (result) {
                 let baseSelectors = result[customKey] || [];
                 if (!Array.isArray(baseSelectors)) baseSelectors = [];
-                const mergedSelectors = Array.from(new Set([...baseSelectors, ...sessionHiddenSelectors]));
+                const mergedSelectors = mergeWithSession(baseSelectors);
                 applyCustomElementStyles(currentSiteIdentifier, mergedSelectors);
                 lastAppliedCustomElements[currentSiteIdentifier] = [...mergedSelectors];
                 refreshFeedbackCount(mergedSelectors);
+                sendResponse({ success: true, customSelectors: mergedSelectors });
+            });
+            return true; // async response
+        } else if (message.type === 'setSessionSelectorEnabled') {
+            // Tick or untick a pick that only lives in this page's session
+            const index = sessionHiddenSelectors.findIndex(s =>
+                (typeof s === 'string' ? s : s.selector) === message.selector
+            );
+            if (index > -1) {
+                const item = sessionHiddenSelectors[index];
+                const pick = typeof item === 'string' ? { name: '', selector: item } : { name: item.name || '', selector: item.selector };
+                if (!message.enabled) pick.enabled = false;
+                sessionHiddenSelectors[index] = pick;
+            }
+            const customKey = `${currentSiteIdentifier}CustomHiddenElements`;
+            chrome.storage.sync.get(customKey, function (result) {
+                let baseSelectors = result[customKey] || [];
+                if (!Array.isArray(baseSelectors)) baseSelectors = [];
+                const mergedSelectors = mergeWithSession(baseSelectors);
+                applyCustomElementStyles(currentSiteIdentifier, mergedSelectors);
+                lastAppliedCustomElements[currentSiteIdentifier] = [...mergedSelectors];
                 sendResponse({ success: true, customSelectors: mergedSelectors });
             });
             return true; // async response
@@ -1468,15 +1521,17 @@
                 (typeof s === 'string' ? s : s.selector) === oldSelector
             );
             if (index > -1) {
-                // Replace with object format { name, selector }
+                // Replace with object format { name, selector }, keeping whether it is on
+                const wasEnabled = isPickEnabled(sessionHiddenSelectors[index]);
                 sessionHiddenSelectors[index] = { name: newName, selector: newSelector };
+                if (!wasEnabled) sessionHiddenSelectors[index].enabled = false;
             }
             // Reapply styles with updated selectors
             const customKey = `${currentSiteIdentifier}CustomHiddenElements`;
             chrome.storage.sync.get(customKey, function (result) {
                 let baseSelectors = result[customKey] || [];
                 if (!Array.isArray(baseSelectors)) baseSelectors = [];
-                const mergedSelectors = Array.from(new Set([...baseSelectors, ...sessionHiddenSelectors]));
+                const mergedSelectors = mergeWithSession(baseSelectors);
                 applyCustomElementStyles(currentSiteIdentifier, mergedSelectors);
                 refreshFeedbackCount(mergedSelectors);
                 sendResponse({ success: true, customSelectors: mergedSelectors });
@@ -1489,7 +1544,7 @@
             chrome.storage.sync.get(customKey, function (result) {
                 let baseSelectors = result[customKey] || [];
                 if (!Array.isArray(baseSelectors)) baseSelectors = [];
-                const mergedSelectors = Array.from(new Set([...baseSelectors, ...sessionHiddenSelectors]));
+                const mergedSelectors = mergeWithSession(baseSelectors);
                 console.log('Reapplying styles with selectors:', mergedSelectors);
                 applyCustomElementStyles(currentSiteIdentifier, mergedSelectors);
                 lastAppliedCustomElements[currentSiteIdentifier] = [...mergedSelectors];
@@ -1561,10 +1616,11 @@
                                     lastAppliedSettings[item] = "visible";
                                 }
                             } else if (item === "redditFeed") {
-                                // Only hide feed on home page, not on subreddits or other pages
+                                // Hide global feeds (including the Best/Hot/New/Top/Rising sorts), but not subreddit feeds.
                                 let isHomePage = window.location.pathname === '/' ||
                                     window.location.pathname.startsWith('/r/popular') ||
-                                    (window.location.pathname === '/' && window.location.search.includes('feed=home'));
+                                    (window.location.pathname === '/' && window.location.search.includes('feed=home')) ||
+                                    /^\/(?:best|hot|new|top|rising)(?:\/|$)/.test(window.location.pathname);
 
                                 if (statusValue === true) {
                                     // User wants feed hidden
@@ -1601,7 +1657,7 @@
             }
             let customSelectors = result[customStorageKey] || [];
             if (!Array.isArray(customSelectors)) customSelectors = [];
-            const merged = Array.from(new Set([...customSelectors, ...sessionHiddenSelectors]));
+            const merged = mergeWithSession(customSelectors);
             applyCustomElementStyles(currentSiteIdentifier, merged);
             if (merged.length > 0) {
                 console.log(`Applied ${merged.length} custom rules for ${currentSiteIdentifier}`);
