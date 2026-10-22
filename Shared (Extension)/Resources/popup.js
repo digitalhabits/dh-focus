@@ -1454,6 +1454,73 @@ document.addEventListener('DOMContentLoaded', function () {
             cancelBtn.addEventListener('click', closeDialog);
         }
 
+        // Remove a pick from storage and from the page's session, then redraw the list.
+        function removePick(siteIdentifier, selector) {
+            chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                if (!tabs || !tabs[0]) return;
+
+                // First remove from storage
+                const storageKey = `${siteIdentifier}CustomHiddenElements`;
+                chrome.storage.sync.get(storageKey, function (result) {
+                    let currentSelectors = result[storageKey] || [];
+                    currentSelectors = currentSelectors.filter(s =>
+                        (typeof s === 'string' ? s : s.selector) !== selector
+                    );
+
+                    chrome.storage.sync.set({ [storageKey]: currentSelectors }, function () {
+                        // Then remove from session memory and reapply styles
+                        chrome.tabs.sendMessage(tabs[0].id, {
+                            type: 'removeSessionSelector',
+                            selector: selector
+                        }, function (response) {
+                            // Use the fresh response from content script
+                            if (response && response.customSelectors) {
+                                updateCustomElementsList(siteIdentifier, response.customSelectors);
+                            } else {
+                                // Fallback to just storage
+                                updateCustomElementsList(siteIdentifier, currentSelectors);
+                            }
+                        });
+                    });
+                });
+            });
+        }
+
+        // A pick is on unless it was switched off (older picks are plain strings).
+        const pickLoadingUntil = new Map(); // pick -> when its tick animation ends
+
+        function isPickEnabled(item) {
+            return typeof item === 'string' || item.enabled !== false;
+        }
+
+        function withPickEnabled(item, enabled) {
+            const pick = typeof item === 'string' ? { name: '', selector: item } : { name: item.name || '', selector: item.selector };
+            if (!enabled) pick.enabled = false;
+            return pick;
+        }
+
+        // Tick or untick a pick: saved picks change in storage (the page follows the
+        // storage change), picks only in this page's session change on the page.
+        function setPickEnabled(siteIdentifier, selector, enabled) {
+            const storageKey = `${siteIdentifier}CustomHiddenElements`;
+            chrome.storage.sync.get(storageKey, function (result) {
+                const saved = Array.isArray(result[storageKey]) ? result[storageKey] : [];
+                const index = saved.findIndex(s => (typeof s === 'string' ? s : s.selector) === selector);
+                if (index !== -1) {
+                    saved[index] = withPickEnabled(saved[index], enabled);
+                    chrome.storage.sync.set({ [storageKey]: saved });
+                    return;
+                }
+                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                    if (!tabs || !tabs[0]) return;
+                    chrome.tabs.sendMessage(tabs[0].id, { type: 'setSessionSelectorEnabled', selector: selector, enabled: enabled }, function (response) {
+                        void chrome.runtime.lastError;
+                        if (response && response.customSelectors) updateCustomElementsList(siteIdentifier, response.customSelectors);
+                    });
+                });
+            });
+        }
+
         function updateCustomElementsList(siteIdentifier, selectors) {
             console.log('updateCustomElementsList called for', siteIdentifier, 'with selectors:', selectors);
             const containerId = currentPlatform ? `${siteIdentifier}CustomElements` : 'genericCustomElements';
@@ -1463,13 +1530,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             container.innerHTML = '';
+            container.classList.add('hide-checkboxes');
 
             if (!Array.isArray(selectors)) {
                 console.warn("Selectors is not an array for", siteIdentifier, selectors);
                 selectors = [];
             }
 
-            selectors.forEach(item => {
+            selectors.forEach((item, index) => {
                 // Support both old format (string) and new format (object with name and selector)
                 let selector, name;
                 if (typeof item === 'string') {
@@ -1479,13 +1547,34 @@ document.addEventListener('DOMContentLoaded', function () {
                     selector = item.selector || item;
                     name = item.name || '';
                 }
+                const enabled = isPickEnabled(item);
 
+                // Same tick box as the built-in options: ticked = hidden
                 const div = document.createElement('div');
-                div.className = 'custom-element';
+                div.className = 'a-toggle custom-element';
 
-                const span = document.createElement('span');
-                span.textContent = name || selector;
-                span.title = selector;
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `${containerId}Pick${index}`;
+                checkbox.checked = enabled;
+                // Same ~800ms tick animation as the built-in options; it carries over the redraw a save causes.
+                const loadingKey = containerId + '\n' + selector;
+                const loadingLeft = (pickLoadingUntil.get(loadingKey) || 0) - Date.now();
+                if (loadingLeft > 0) {
+                    checkbox.classList.add('loading');
+                    setTimeout(() => checkbox.classList.remove('loading'), loadingLeft);
+                }
+                checkbox.addEventListener('change', function () {
+                    pickLoadingUntil.set(loadingKey, Date.now() + 800);
+                    checkbox.classList.add('loading');
+                    setTimeout(() => checkbox.classList.remove('loading'), 800);
+                    setPickEnabled(siteIdentifier, selector, checkbox.checked);
+                });
+
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                label.textContent = name || selector;
+                label.title = selector;
 
                 const buttonsContainer = document.createElement('div');
                 buttonsContainer.className = 'custom-element-buttons';
@@ -1520,8 +1609,8 @@ document.addEventListener('DOMContentLoaded', function () {
                                     );
 
                                     if (index !== -1) {
-                                        // Selector was in storage, update it
-                                        currentSelectors[index] = { name: newName, selector: newSelector };
+                                        // Selector was in storage, update it (keeping whether it is on)
+                                        currentSelectors[index] = withPickEnabled({ name: newName, selector: newSelector }, isPickEnabled(currentSelectors[index]));
                                         chrome.storage.sync.set({ [storageKey]: currentSelectors }, function () {
                                             // Merge storage with any session selectors
                                             const sessionSelectors = (response && response.customSelectors) || [];
@@ -1554,46 +1643,18 @@ document.addEventListener('DOMContentLoaded', function () {
                     </svg>`;
                 removeButton.title = 'Remove';
                 removeButton.addEventListener('click', function () {
-                    // Always remove from BOTH session AND storage (in case data exists in either)
-                    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-                        if (!tabs || !tabs[0]) return;
-
-                        // First remove from storage
-                        const storageKey = `${siteIdentifier}CustomHiddenElements`;
-                        chrome.storage.sync.get(storageKey, function (result) {
-                            let currentSelectors = result[storageKey] || [];
-                            currentSelectors = currentSelectors.filter(s =>
-                                (typeof s === 'string' ? s : s.selector) !== selector
-                            );
-
-                            chrome.storage.sync.set({ [storageKey]: currentSelectors }, function () {
-                                // Then remove from session memory and reapply styles
-                                chrome.tabs.sendMessage(tabs[0].id, {
-                                    type: 'removeSessionSelector',
-                                    selector: selector
-                                }, function (response) {
-                                    // Use the fresh response from content script
-                                    if (response && response.customSelectors) {
-                                        updateCustomElementsList(siteIdentifier, response.customSelectors);
-                                    } else {
-                                        // Fallback to just storage
-                                        updateCustomElementsList(siteIdentifier, currentSelectors);
-                                    }
-                                });
-                            });
-                        });
-                    });
+                    removePick(siteIdentifier, selector);
                 });
 
                 buttonsContainer.appendChild(editButton);
                 buttonsContainer.appendChild(removeButton);
+                div.appendChild(checkbox);
+                div.appendChild(label);
                 div.appendChild(buttonsContainer);
-                div.appendChild(span);
 
                 container.appendChild(div);
             });
 
-            console.log('Updated container content for', containerId, ':', container.innerHTML);
             setupPopupTabOrder();
         }
 

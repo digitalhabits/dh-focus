@@ -1440,26 +1440,66 @@ p.how-to-description {
     font-size: 0.9em;
 }
 
-.custom-element {
+/* A pick row: the built-in tick box, then the name cut short, then edit and remove at the far right. */
+.custom-elements .a-toggle.custom-element {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    margin-bottom: 5px;
+    gap: 8px;
 }
 
-.custom-element span {
-    flex-grow: 1;
+.custom-elements .a-toggle.custom-element > label {
+    flex: 1 1 auto;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    margin-right: 10px;
-    margin-left: 3px;
+}
+
+/* Pick rows: same spacing as the built-in options. */
+.custom-elements .a-toggle.custom-element {
+    margin-bottom: var(--selector-row-spacing);
+}
+
+/* Edit and remove: bare icons the size of the tick box, no button outline. */
+.custom-elements .a-toggle.custom-element .icon-btn {
+    padding: 0;
+    margin: 0;
+    border: none;
+    background: none;
+}
+
+.custom-elements .a-toggle.custom-element .icon-btn svg {
+    width: var(--selector-box-size);
+    height: var(--selector-box-size);
+}
+
+/* Hover: the icon just darkens (the shared red/teal button hover would leave a white × on a transparent background). */
+.custom-elements .a-toggle.custom-element .icon-btn:hover {
+    background: none;
+    border: none;
+}
+
+.custom-elements .a-toggle.custom-element .icon-btn:hover svg {
+    stroke: var(--text-primary);
+}
+
+.custom-elements .a-toggle.custom-element .custom-element-buttons {
+    gap: 12px;
+}
+
+/* The row is as tall as the buttons, so centre the box on it instead of pinning it to the top. */
+.custom-elements .a-toggle.custom-element input[type="checkbox"],
+.custom-elements .a-toggle.custom-element input[type="checkbox"] + label::before,
+.custom-elements .a-toggle.custom-element input[type="checkbox"] + label::after {
+    top: calc(50% - var(--selector-box-size) / 2);
 }
 
 .custom-element-buttons {
     display: flex;
+    flex: 0 0 auto;
     gap: 4px;
     align-items: center;
+    margin-left: auto;
 }
 
 .selector-input {
