@@ -599,7 +599,26 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        /** While settings are locked, a ticked pick can't be unticked or removed; only its name can change. */
+        function isPickLocked(enabled) {
+            return isSettingsLocked && enabled;
+        }
+
+        function updatePickLockUI() {
+            document.querySelectorAll('.custom-elements .a-toggle.custom-element').forEach(function (row) {
+                const checkbox = row.querySelector('input[type="checkbox"]');
+                const removeButton = row.querySelector('.remove-symbol');
+                const locked = isPickLocked(!!(checkbox && checkbox.checked));
+                row.classList.toggle('lock-protected', locked);
+                if (removeButton) {
+                    removeButton.disabled = locked;
+                    removeButton.title = locked ? 'Locked while settings are locked' : 'Remove';
+                }
+            });
+        }
+
         function updateLockProtectedUI() {
+            updatePickLockUI();
             if (currentPlatform) {
                 elementsThatCanBeHidden.filter(e => e.startsWith(currentPlatform)).forEach(function (item) {
                     const toggleEl = document.getElementById(item + 'Toggle');
@@ -1350,7 +1369,7 @@ document.addEventListener('DOMContentLoaded', function () {
             options = options || {};
             const dialogTitle = options.title || 'Edit pick';
             const saveLabel = options.saveLabel || 'Save';
-            const showRemove = typeof options.onRemove === 'function';
+            const showRemove = typeof options.onRemove === 'function' && !options.selectorLocked;
 
             const overlay = document.createElement('div');
             overlay.className = 'edit-panel-overlay';
@@ -1389,8 +1408,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     Learn about CSS selectors<br>from <a href="${CSS_SELECTOR_HELP_URL}" target="_blank" rel="noopener noreferrer">Mozilla</a>
                                 </span>
                             </label>
-                            <textarea id="element-selector" class="shadcn-input" rows="3" spellcheck="false" placeholder="e.g., div.class-name"></textarea>
-                            <p class="edit-dialog-hint">Without a name, the list shows the selector.</p>
+                            <textarea id="element-selector" class="shadcn-input" rows="3" spellcheck="false" placeholder="e.g., div.class-name"${options.selectorLocked ? ' readonly' : ''}></textarea>
+                            <p class="edit-dialog-hint">Without a name, the list shows the selector.</p>${options.selectorLocked ? `
+                            <p class="edit-dialog-note">Settings are locked, so only the name can change.</p>` : ''}
                         </div>
                     </div>
                     <div class="edit-dialog-buttons">
@@ -1473,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Handle save
             saveBtn.addEventListener('click', function () {
                 const newName = nameInput.value.trim();
-                const newSelector = selectorInput.value.trim();
+                const newSelector = options.selectorLocked ? selector : selectorInput.value.trim();
 
                 if (!newSelector) {
                     alert('CSS Selector cannot be empty');
@@ -1614,6 +1634,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     setTimeout(() => checkbox.classList.remove('loading'), loadingLeft);
                 }
                 checkbox.addEventListener('change', function () {
+                    if (isSettingsLocked && !checkbox.checked) {
+                        checkbox.checked = true;
+                        return;
+                    }
                     pickLoadingUntil.set(loadingKey, Date.now() + 800);
                     checkbox.classList.add('loading');
                     setTimeout(() => checkbox.classList.remove('loading'), 800);
@@ -1637,6 +1661,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </svg>`;
                 editButton.title = 'Edit';
                 editButton.addEventListener('click', function () {
+                    const selectorLocked = isPickLocked(checkbox.checked);
                     showEditDialog(siteIdentifier, selector, name, function (newName, newSelector) {
                         // Always edit in BOTH session AND storage (in case data exists in either)
                         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -1679,7 +1704,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 });
                             });
                         });
-                    }, { onRemove: function () { removePick(siteIdentifier, selector); } });
+                    }, { selectorLocked: selectorLocked, onRemove: function () { removePick(siteIdentifier, selector); } });
                 });
 
                 // Remove button
@@ -1692,6 +1717,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     </svg>`;
                 removeButton.title = 'Remove';
                 removeButton.addEventListener('click', function () {
+                    if (isPickLocked(checkbox.checked)) return;
                     removePick(siteIdentifier, selector);
                 });
 
@@ -1704,6 +1730,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 container.appendChild(div);
             });
 
+            updatePickLockUI();
             setupPopupTabOrder();
         }
 

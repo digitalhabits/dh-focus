@@ -1494,11 +1494,36 @@ p.how-to-description {
     top: calc(50% - var(--selector-box-size) / 2);
 }
 
+/* Locked pick: the row stays fully opaque so the pencil still works; the box, name and × grey out. */
+.custom-elements .a-toggle.custom-element.lock-protected {
+    opacity: 1;
+}
+
+.custom-elements .a-toggle.custom-element.lock-protected > label,
+.custom-elements .a-toggle.custom-element.lock-protected .remove-symbol {
+    opacity: 0.55;
+}
+
+.custom-elements .a-toggle.custom-element.lock-protected .remove-symbol {
+    cursor: not-allowed;
+}
+
 .edit-dialog-hint {
     margin: 6px 0 0;
     font-size: 13px;
     line-height: 1.4;
     color: var(--text-muted);
+}
+
+.edit-dialog-note {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+#element-selector[readonly] {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .custom-element-buttons {

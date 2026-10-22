@@ -551,6 +551,17 @@
                 handleUndo();
             });
             feedbackContainer.appendChild(undoButton);
+            // While settings are locked a pick can't be undone, so show Undo greyed out and disabled.
+            if (currentSiteIdentifier) {
+                chrome.storage.sync.get(`${currentSiteIdentifier}SettingsLocked`, function (result) {
+                    if (result[`${currentSiteIdentifier}SettingsLocked`] !== true) return;
+                    undoButton.disabled = true;
+                    undoButton.title = 'Settings are locked';
+                    undoButton.style.opacity = '0.45';
+                    undoButton.style.cursor = 'not-allowed';
+                    undoButton.style.pointerEvents = 'none';
+                });
+            }
         }
 
         const doneButton = document.createElement('button');
@@ -580,9 +591,15 @@
         if (sessionHiddenSelectors.length === 0 || !currentSiteIdentifier) return;
         const customStorageKey = `${currentSiteIdentifier}CustomHiddenElements`;
         const rememberKey = `${currentSiteIdentifier}RememberSettings`;
-        chrome.storage.sync.get([customStorageKey, rememberKey], function (result) {
+        const lockKey = `${currentSiteIdentifier}SettingsLocked`;
+        chrome.storage.sync.get([customStorageKey, rememberKey, lockKey], function (result) {
             let customSelectors = result[customStorageKey] || [];
             if (!Array.isArray(customSelectors)) customSelectors = [];
+            if (result[lockKey] === true) {
+                const merged = mergeWithSession(customSelectors);
+                updateFeedbackMessage('Settings are locked', false, merged.length, result[rememberKey] === false);
+                return;
+            }
             const selectorToRemove = sessionHiddenSelectors.pop();
             const rememberEnabled = result[rememberKey] !== false; // default true
 
