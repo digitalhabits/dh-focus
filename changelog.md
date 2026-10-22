@@ -8,6 +8,46 @@ platform tags, and Internal). Store “What’s New” / AMO notes are generated
 `scripts/changelog-to-store-whats-new.js` (excludes Internal; keeps untagged
 plus platform-relevant tags; strips markdown).
 
+## v6.10.0
+
+This update comes with some useful new features, design improvements, and under-the-hood improvements.
+
+### Hide Distracting Elements
+
+- Each of your own picks now has a tick box, like the built-in options. Untick
+  a pick to show that part of the page again without deleting it.
+- Editing a pick has a new design. On iPhone it fills the extension sheet at
+  its current size, and the help icon next to Selector shows a short tip with
+  a link instead of leaving the page.
+- Long lists of picks show the first four, with "Show more" for the rest.
+  Picks without a name show their selector, cut short at the end.
+- Facebook: fixed hiding Stories, Reels and People you may know in the feed,
+  and the Reels carousel and Reels button in search, and added Suggested
+  groups.
+- Google: fixed the sponsored products background
+- Instagram: Reels now also hides the Reels tab and reels in the posts grid on
+  profiles, and the remaining posts close the gaps.
+- LinkedIn: fixed hiding notification dots on small screens.
+- Reddit: fixed Popular, which no longer leaves an empty gap in the sidebar,
+  and the feed now stays hidden when you switch to Best, Hot, New, Top or
+  Rising.
+- WhatsApp: fixed hiding message previews, profile pictures, and the Status,
+  Channels and Communities buttons.
+- X: fixed Who to follow, and added Grok AI selector.
+- YouTube: fixed the voice search button, which now hides with the search bar,
+  and the thumbnail setting, which now also covers Playables, and added
+  Playables and Explore more topics on the home page.
+
+### Accountability
+
+- While settings are locked, your ticked picks can't be unticked or removed,
+  and only their name can be edited. Undo in pick mode is greyed out.
+
+### Internal
+
+- Added a script that generates the store screenshots, and updated the store
+  slides.
+
 ## v6.9.3
 
 This update comes with some design improvements and under-the-hood improvements.
