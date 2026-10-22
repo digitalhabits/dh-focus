@@ -1987,6 +1987,43 @@ p.how-to-description {
     box-shadow: var(--btn-custom-hide-focus-ring);
 }
 
+/* "Show N more" under a long picks list */
+.custom-elements .custom-element[hidden] {
+    display: none !important;
+}
+
+.picks-show-more {
+    display: block;
+    margin: 4px 0 0;
+    padding: 4px 0;
+    border: none;
+    background: none;
+    color: var(--accent-primary);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+}
+
+/* Mouse only: on touch screens :hover sticks after a tap and made "Show less" look different. */
+@media (hover: hover) {
+    .picks-show-more:hover {
+        color: var(--accent-hover);
+        text-decoration: underline;
+    }
+}
+
+.picks-show-more:focus {
+    outline: none;
+}
+
+.picks-show-more:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px var(--btn-custom-hide-focus-border);
+    border-radius: 4px;
+}
+
 .primary-btn,
 .secondary-btn {
     padding: 8px 16px;

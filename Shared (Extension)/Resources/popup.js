@@ -1590,6 +1590,10 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
+        // Picks lists show the first few; which sites are expanded lasts while the popup is open.
+        const PICKS_COLLAPSED_COUNT = 4;
+        const expandedPickLists = new Set();
+
         function updateCustomElementsList(siteIdentifier, selectors) {
             console.log('updateCustomElementsList called for', siteIdentifier, 'with selectors:', selectors);
             const containerId = currentPlatform ? `${siteIdentifier}CustomElements` : 'genericCustomElements';
@@ -1727,9 +1731,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 div.appendChild(label);
                 div.appendChild(buttonsContainer);
 
+                if (index >= PICKS_COLLAPSED_COUNT && !expandedPickLists.has(containerId)) div.hidden = true;
                 container.appendChild(div);
             });
 
+            const extraPicks = selectors.length - PICKS_COLLAPSED_COUNT;
+            if (extraPicks > 0) {
+                const expanded = expandedPickLists.has(containerId);
+                const moreButton = document.createElement('button');
+                moreButton.type = 'button';
+                moreButton.className = 'picks-show-more';
+                moreButton.textContent = expanded ? 'Show less' : `Show ${extraPicks} more`;
+                moreButton.setAttribute('aria-expanded', String(expanded));
+                moreButton.addEventListener('click', function () {
+                    expanded ? expandedPickLists.delete(containerId) : expandedPickLists.add(containerId);
+                    updateCustomElementsList(siteIdentifier, selectors);
+                    const again = container.querySelector('.picks-show-more');
+                    if (again) again.focus();
+                });
+                container.appendChild(moreButton);
+            }
+
+            console.log('Updated container content for', containerId, ':', container.innerHTML);
             updatePickLockUI();
             setupPopupTabOrder();
         }
