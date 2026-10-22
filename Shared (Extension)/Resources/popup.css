@@ -1494,6 +1494,13 @@ p.how-to-description {
     top: calc(50% - var(--selector-box-size) / 2);
 }
 
+.edit-dialog-hint {
+    margin: 6px 0 0;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--text-muted);
+}
+
 .custom-element-buttons {
     display: flex;
     flex: 0 0 auto;
@@ -1536,23 +1543,32 @@ p.how-to-description {
     z-index: 10000;
 }
 
-/* Add/Edit CSS selector — full-bleed panel like settings (#faq-dropdown) */
+/* Add/Edit pick — floating card over the dimmed popup (Blocker's .modal-overlay/.modal-content);
+   iPhone turns it into a full-screen sheet in the max-device-width block below. */
 .edit-panel-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    height: 100%;
+    inset: 0;
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
     z-index: 1000;
-    background-color: var(--modal-bg);
+    background-color: var(--modal-overlay);
     color: var(--text-secondary);
     text-align: left;
+    box-sizing: border-box;
+}
+
+.edit-dialog-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+    max-height: 100%;
+    overflow: hidden;
+    border-radius: 16px;
+    background: var(--bg-secondary);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     box-sizing: border-box;
 }
 
@@ -1562,8 +1578,33 @@ p.how-to-description {
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: var(--settings-overlay-padding-y) var(--settings-overlay-padding-x) 8px;
+    padding: 20px 20px 4px;
     box-sizing: border-box;
+}
+
+/* Bin icon by the title: iPhone only (desktop keeps the Remove text button in the footer). */
+.edit-dialog-trash {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    margin: -6px -6px -6px 0;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: rgba(220, 38, 38, 0.1);
+    color: #dc2626;
+    cursor: pointer;
+}
+
+.edit-dialog-trash:active {
+    background: rgba(220, 38, 38, 0.18);
+}
+
+.dark-mode .edit-dialog-trash {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.14);
 }
 
 .edit-dialog-header {
@@ -1575,7 +1616,7 @@ p.how-to-description {
 }
 
 .edit-dialog-field {
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .edit-dialog-field label {
@@ -1596,6 +1637,11 @@ p.how-to-description {
 }
 
 .edit-dialog-field label .help-icon {
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     margin-left: 4px;
@@ -1619,7 +1665,7 @@ p.how-to-description {
    the line break, so no wrapped line leaves empty space on the right. */
 .edit-dialog-field label .help-icon-tooltip {
     position: absolute;
-    right: 0;
+    left: 0;
     bottom: calc(100% + 8px);
     z-index: 20;
     display: none;
@@ -1644,17 +1690,40 @@ p.how-to-description {
     pointer-events: none;
 }
 
-.edit-dialog-field label .help-icon:hover .help-icon-tooltip,
-.edit-dialog-field label .help-icon:focus-visible .help-icon-tooltip {
+/* Mouse: hover or keyboard focus shows it. Touch: only the tapped-open state, because
+   :hover sticks after a tap and would keep it showing after a second tap. */
+@media (hover: hover) {
+    .edit-dialog-field label .help-icon:hover + .help-icon-tooltip,
+    .edit-dialog-field label .help-icon:focus-visible + .help-icon-tooltip {
+        display: block;
+    }
+}
+
+.edit-dialog-field label .help-icon-tooltip.is-open {
     display: block;
+}
+
+/* Tapped open on a touch screen: the link inside can be tapped. */
+.edit-dialog-field label .help-icon-tooltip.is-open {
+    pointer-events: auto;
+}
+
+.edit-dialog-field label .help-icon-tooltip a {
+    color: var(--accent-primary);
+    text-decoration: underline;
+}
+
+/* The selector box grows with the dialog (a taller popup or sheet), within limits. */
+#element-selector {
+    height: clamp(72px, 24vh, 180px);
 }
 
 .edit-dialog-field input,
 .edit-dialog-field textarea {
     width: 100%;
-    padding: 8px 10px;
+    padding: 10px 12px;
     border: 1px solid var(--border-input);
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 14px;
     box-sizing: border-box;
     font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
@@ -1664,7 +1733,9 @@ p.how-to-description {
 
 .edit-dialog-field textarea {
     resize: vertical;
-    font-family: monospace;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.45;
     min-height: 80px;
 }
 
@@ -1837,30 +1908,55 @@ p.how-to-description {
 .edit-dialog-buttons {
     flex-shrink: 0;
     display: flex;
+    align-items: center;
     gap: 8px;
-    padding: 12px var(--settings-overlay-padding-x);
-    border-top: 1px solid var(--border-color-medium);
-    background: var(--modal-bg);
+    padding: 12px 20px 20px;
     box-sizing: border-box;
+}
+
+.edit-dialog-buttons-right {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
 }
 
 .edit-panel-overlay .edit-dialog-buttons .primary-btn,
 .edit-panel-overlay .edit-dialog-buttons .secondary-btn {
-    flex: 1;
-    padding: 10px 16px;
+    padding: 9px 16px;
     border-radius: 8px;
     font-size: 15px;
     appearance: none;
     -webkit-appearance: none;
 }
 
-.edit-panel-overlay .edit-dialog-buttons .primary-btn:focus,
-.edit-panel-overlay .edit-dialog-buttons .secondary-btn:focus {
+/* Red text button, bottom left */
+.edit-dialog-remove {
+    padding: 9px 4px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: none;
+    color: #dc2626;
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.edit-dialog-remove:hover {
+    text-decoration: underline;
+}
+
+.dark-mode .edit-dialog-remove {
+    color: #f87171;
+}
+
+.edit-panel-overlay .edit-dialog-buttons button:focus {
     outline: none;
 }
 
-.edit-panel-overlay .edit-dialog-buttons .primary-btn:focus-visible,
-.edit-panel-overlay .edit-dialog-buttons .secondary-btn:focus-visible {
+.edit-panel-overlay .edit-dialog-buttons button:focus-visible {
     outline: none;
     border: 1px solid var(--btn-custom-hide-focus-border);
     box-shadow: var(--btn-custom-hide-focus-ring);
@@ -4048,4 +4144,63 @@ body.manual-css-enabled .custom-section .hide-distractions-title {
 
 .redirect-to-current-site-list .redirect-pair .redirect-to-input {
     grid-area: 1 / 3;
+}
+
+/* iPhone — after the base dialog rules so these win */
+@media only screen and (max-device-width: 768px) {
+    /* Edit pick: full-screen sheet (Blocker's .mobile-fullscreen-modal) */
+    .edit-panel-overlay {
+        padding: 0;
+        align-items: stretch;
+        background-color: var(--modal-bg);
+    }
+
+    .edit-dialog-card {
+        max-width: 100%;
+        height: 100%;
+        border-radius: 0;
+        box-shadow: none;
+        background: var(--modal-bg);
+    }
+
+    .edit-dialog-scroll {
+        padding: calc(env(safe-area-inset-top, 0px) + 18px) max(18px, env(safe-area-inset-right, 0px)) 8px max(18px, env(safe-area-inset-left, 0px));
+    }
+
+    .edit-panel-overlay #edit-dialog-title {
+        font-size: 1.45rem;
+    }
+
+    .edit-dialog-field input,
+    .edit-dialog-field textarea {
+        font-size: 16px;
+    }
+
+    .edit-dialog-buttons {
+        padding: 12px max(18px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 12px) max(18px, env(safe-area-inset-left, 0px));
+        border-top: 1px solid var(--border-color-medium);
+    }
+
+    .edit-dialog-buttons-right {
+        flex: 1;
+    }
+
+    .edit-panel-overlay .edit-dialog-buttons .primary-btn,
+    .edit-panel-overlay .edit-dialog-buttons .secondary-btn {
+        flex: 1;
+        padding: 12px 16px;
+        font-size: 16px;
+    }
+
+    .edit-dialog-remove {
+        display: none;
+    }
+
+    .edit-dialog-trash {
+        display: inline-flex;
+    }
+
+    .edit-dialog-header {
+        align-items: center;
+    }
 }
