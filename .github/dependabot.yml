@@ -1,0 +1,18 @@
+# Update pull requests for the GitHub Actions the release workflows use.
+# Runs once a year on its own; run it by hand from Insights → Dependency graph →
+# Dependabot. All action updates come in one PR, and open PRs are never rebased
+# automatically; comment "@dependabot rebase" on one to refresh it.
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "yearly"
+    open-pull-requests-limit: 5
+    rebase-strategy: "disabled"
+    commit-message:
+      prefix: "ci(actions)"
+    groups:
+      actions:
+        patterns: ["*"]
