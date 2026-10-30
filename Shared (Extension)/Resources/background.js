@@ -385,6 +385,12 @@ function connectNative() {
     port = chrome.runtime.connectNative(NATIVE_HOST);
     port.onMessage.addListener(msg => {
       applyNativePayload(msg);
+      // Blocker's setup button on Windows, where Chromium won't open chrome:// from the command line.
+      if (msg && msg.openExtensionSettings) {
+        chrome.tabs.create({ url: "chrome://extensions/?id=" + chrome.runtime.id })
+          .then(tab => chrome.windows.update(tab.windowId, { focused: true }))
+          .catch(e => console.info("[redd-block] open extensions page failed:", e && e.message));
+      }
     });
     port.onDisconnect.addListener(() => {
       const err = chrome.runtime.lastError;
