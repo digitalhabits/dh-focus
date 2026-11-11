@@ -668,6 +668,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         redirectUrlInput.disabled = shouldProtectUrl;
                         redirectUrlInput.readOnly = shouldProtectUrl;
                     }
+                    const allPagesToggle = document.getElementById('redirectAllPages');
+                    if (allPagesToggle) allPagesToggle.disabled = shouldProtectUrl;
                 }
             }
         }
@@ -1916,6 +1918,7 @@ document.addEventListener('DOMContentLoaded', function () {
             redirectPanel.hidden = true;
             const redirectTitle = document.createElement('label');
             redirectTitle.className = 'feature-panel-title';
+            redirectTitle.id = 'redirect-panel-title';
             redirectTitle.htmlFor = 'redirectUrl';
             redirectTitle.textContent = 'Redirect to';
             redirectPanel.appendChild(redirectTitle);
@@ -2456,6 +2459,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div id="redirect-details" class="redirect-details" hidden>
                     <input type="text" id="redirectUrl" name="redirectUrl" class="redirect-url-input" placeholder="/feed/subscriptions" spellcheck="false" autocomplete="off" aria-label="Redirect destination">
                     <p id="redirect-loop-warning" class="redirect-loop-warning" hidden role="alert"></p>
+                    <label id="redirect-all-pages-row" class="redirect-all-pages" hidden><input type="checkbox" id="redirectAllPages"><span id="redirectAllPagesLabel"></span></label>
                     <p class="how-to-description redirect-help">Either a page on this site (e.g. <code>/feed/subscriptions</code>) or another website (e.g. <code>wikipedia.org</code>).</p>
                 </div>
                 <div id="redirect-to-current-site-group" class="redirect-to-current-site-group">
@@ -2473,6 +2477,10 @@ document.addEventListener('DOMContentLoaded', function () {
             redirectToCurrentSiteHeading.textContent = `Redirects to ${getPopupDisplayHost()}`;
 
             const urlKey = `${siteIdentifier}RedirectUrl`;
+            const allPagesKey = `${siteIdentifier}RedirectAllPages`;
+            const allPagesRow = document.getElementById('redirect-all-pages-row');
+            const allPagesToggle = document.getElementById('redirectAllPages');
+            document.getElementById('redirectAllPagesLabel').textContent = `Always load ${getPopupDisplayHost()} on this page`;
             let redirectLoopConflict = null;
             let loopCheckGeneration = 0;
 
@@ -2537,8 +2545,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
-            chrome.storage.sync.get(urlKey, function (result) {
+            // Same-site destinations redirect from the home page only (unless ticked); other sites redirect everywhere.
+            // Same rule as content.js redirectAppliesHere.
+            function refreshRedirectScope() {
+                const raw = urlInput.value.trim();
+                const site = host => String(host || '').toLowerCase().replace(/^(www|m)\./, '');
+                const sameSite = raw.startsWith('/') || site(extractRedirectDestinationHost(raw)) === site(currentPageHostname);
+                const title = document.getElementById('redirect-panel-title');
+                const host = getPopupDisplayHost();
+                if (title) title.textContent = !raw ? 'Redirect to' : sameSite ? `Redirect from the ${host} home page to` : `Redirect all of ${host} to`;
+                allPagesRow.hidden = !sameSite;
+            }
+
+            allPagesToggle.addEventListener('change', function () {
+                if (isUrlProtected()) {
+                    allPagesToggle.checked = !allPagesToggle.checked;
+                    return;
+                }
+                chrome.storage.sync.set({ [allPagesKey]: allPagesToggle.checked });
+            });
+
+            chrome.storage.sync.get([urlKey, allPagesKey], function (result) {
                 urlInput.value = typeof result[urlKey] === 'string' ? result[urlKey] : '';
+                allPagesToggle.checked = result[allPagesKey] === true;
+                refreshRedirectScope();
                 refreshRedirectLoopWarning();
                 refreshRedirectRulesToCurrentSiteList();
             });
@@ -2582,6 +2612,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 function clearRejectedValue() {
                     urlInput.value = '';
+                    refreshRedirectScope();
                     setLoopWarning(null);
                     chrome.storage.sync.set({ [urlKey]: '' });
                     updateLockProtectedUI();
@@ -2624,6 +2655,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.stopPropagation();
             });
             urlInput.addEventListener('input', refreshRedirectLoopWarning);
+            urlInput.addEventListener('input', refreshRedirectScope);
             urlInput.addEventListener('change', commitRedirectUrl);
             urlInput.addEventListener('blur', commitRedirectUrl);
             urlInput.addEventListener('keydown', function (e) {

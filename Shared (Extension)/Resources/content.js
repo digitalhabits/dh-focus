@@ -1115,7 +1115,14 @@
     }
 
     function redirectKeys() {
-        return redirectCandidateIds().flatMap(id => [`${id}RedirectStatus`, `${id}RedirectUrl`]);
+        return redirectCandidateIds().flatMap(id => [`${id}RedirectStatus`, `${id}RedirectUrl`, `${id}RedirectAllPages`]);
+    }
+
+    // A redirect to elsewhere on this site fires only from its home page, unless "Always load" is ticked.
+    function redirectAppliesHere(targetHref, result) {
+        const site = host => host.replace(/^(www|m)\./, '');
+        if (window.location.pathname === '/' || site(new URL(targetHref).hostname) !== site(window.location.hostname)) return true;
+        return redirectCandidateIds().some(id => result[`${id}RedirectAllPages`] === true);
     }
 
     // Where this page's first enabled redirect rule points, or null.
@@ -1143,7 +1150,7 @@
 
         chrome.storage.sync.get(redirectKeys(), function (result) {
             const targetHref = redirectTargetFrom(result);
-            if (!targetHref || isAlreadyAtRedirectTarget(targetHref)) {
+            if (!targetHref || isAlreadyAtRedirectTarget(targetHref) || !redirectAppliesHere(targetHref, result)) {
                 maybeStartAccessDelayFromStorage();
                 return;
             }

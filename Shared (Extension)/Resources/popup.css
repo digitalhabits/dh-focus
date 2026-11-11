@@ -3369,6 +3369,40 @@ footer .friction-customisation {
     display: none;
 }
 
+/* Padded for a bigger tap target on iOS; top-aligned so a wrapped label keeps the box on line one. */
+.feature-panel .redirect-all-pages {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 4px 0 0 0;
+    padding: 4px 0;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.feature-panel .redirect-all-pages input {
+    margin: 2px 0 0 0;
+    flex: 0 0 auto;
+}
+
+.feature-panel .redirect-all-pages span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Locked: dim like the redirect address box */
+.feature-panel .redirect-all-pages input:disabled,
+.feature-panel .redirect-all-pages input:disabled + span {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.feature-panel .redirect-all-pages[hidden] {
+    display: none;
+}
+
 /* Shared compact seconds field (unlock wait + site access delay) */
 .compact-seconds-input,
 #faq-dropdown #waitTime.compact-seconds-input {
