@@ -2140,6 +2140,12 @@ document.addEventListener('DOMContentLoaded', function () {
             return String(host || '').toLowerCase().replace(/^www\./, '');
         }
 
+        // Known sites are saved without www. (and protocol); the redirect adds www. back (content.js resolveRedirectTarget).
+        function tidyRedirectDestination(raw) {
+            const m = raw.match(/^(?:https?:\/\/)?(?:www\.)?([^\/?#]+)(.*)$/i);
+            return m && Object.values(platformHostnames).some(hosts => hosts.includes('www.' + m[1].toLowerCase())) ? m[1] + m[2] : raw;
+        }
+
         function extractRedirectDestinationHost(rawInput) {
             const raw = (rawInput || '').trim();
             if (!raw || raw.startsWith('/')) return null;
@@ -2599,7 +2605,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     return;
                 }
 
-                const rawValue = urlInput.value.trim();
+                const rawValue = tidyRedirectDestination(urlInput.value.trim());
                 const destHost = extractRedirectDestinationHost(rawValue);
                 const currentHosts = currentSiteHostSet();
 

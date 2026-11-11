@@ -1063,26 +1063,13 @@
     function resolveRedirectTarget(rawInput) {
         const raw = (rawInput || '').trim();
         if (!raw) return null;
-
-        if (/^https?:\/\//i.test(raw)) {
-            try {
-                return new URL(raw).href;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        if (raw.startsWith('/')) {
-            try {
-                return new URL(raw, window.location.origin).href;
-            } catch (e) {
-                return null;
-            }
-        }
-
-        // Domain, domain/path, or subdomain/path without protocol
         try {
-            return new URL('https://' + raw).href;
+            // A full URL or a path on this site; anything else is a domain typed without https://
+            const url = new URL(/^(https?:\/\/|\/)/i.test(raw) ? raw : 'https://' + raw, window.location.origin);
+            // A known site's bare domain goes to its www address (bare instagram.com can time out)
+            const www = 'www.' + url.hostname;
+            if (Object.values(platformHostnames).some(hosts => hosts.includes(www))) url.hostname = www;
+            return url.href;
         } catch (e) {
             return null;
         }
