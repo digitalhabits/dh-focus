@@ -2463,7 +2463,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <input type="checkbox" id="redirectToggle" name="redirectToggle" aria-label="Redirect to another page / website">
                 <label id="redirectToggleLabel">Redirect to another page / website</label>
                 <div id="redirect-details" class="redirect-details" hidden>
-                    <input type="text" id="redirectUrl" name="redirectUrl" class="redirect-url-input" placeholder="/feed/subscriptions" spellcheck="false" autocomplete="off" aria-label="Redirect destination">
+                    <input type="text" id="redirectUrl" name="redirectUrl" class="redirect-url-input" placeholder="/feed/subscriptions" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" enterkeyhint="done" aria-label="Redirect destination">
                     <p id="redirect-loop-warning" class="redirect-loop-warning" hidden role="alert"></p>
                     <label id="redirect-all-pages-row" class="redirect-all-pages" hidden><input type="checkbox" id="redirectAllPages"><span id="redirectAllPagesLabel"></span></label>
                     <p class="how-to-description redirect-help">Either a page on this site (e.g. <code>/feed/subscriptions</code>) or another website (e.g. <code>wikipedia.org</code>).</p>
@@ -2667,7 +2667,11 @@ document.addEventListener('DOMContentLoaded', function () {
             urlInput.addEventListener('keydown', function (e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
+                    // Same as pressing Done; save here too, as blur doesn't fire when the popup window lacks focus
+                    commitRedirectUrl();
                     urlInput.blur();
+                    const panel = urlInput.closest('.feature-panel');
+                    if (panel) panel.querySelector('.feature-panel-done').click();
                 }
             });
         }
