@@ -1,66 +1,79 @@
 # Digital Habits: Focus
 
-**Plain sailing in the distracting digital world**
+> Formerly known as ReDD Focus, Viking Focus or MindShield.
 
-<p align="center">
-  <img src="https://github.com/digitalhabits/dh-focus/blob/main/Shared%20(Extension)/Resources/images/icon-512.png?raw=true" alt="Digital Habits: Focus Icon" width="120" />
-</p>
+<div align="center">
+  <img src="Shared%20(Extension)/Resources/images/icon-512.png" alt="Digital Habits: Focus Logo" width="200"/>
+</div>
 
-Source code for the Safari, Chrome, and Firefox extension **Digital Habits: Focus**, available for Mac, iOS, and other devices.
+Digital Habits: Focus is a browser extension that makes distracting websites less distracting. It can hide the feeds, recommendations and other parts of a site that pull your attention away, turn a site greyscale, add a delay before it opens, or redirect it somewhere else. It helps people use YouTube, Instagram, LinkedIn and other sites for what they came to do. It works in Safari on Mac, iPhone and iPad, and in Chrome, Edge and Firefox.
 
-**Hide distractions on any site** (e.g., YouTube, Instagram, LinkedIn, Google Search, etc.). Works on any website in any browser, with pre-configured options for popular platforms.
+It is made by the not-for-profit [Centre for Digital Habits](https://digitalhabits.org) and [backed by research](https://arxiv.org/pdf/2001.04180.pdf) at the universities of Oxford, Copenhagen and Maastricht.
 
-Digital Habits: Focus is **open source**, developed by the [Centre for Digital Habits](https://digitalhabits.org), and [backed by research](https://arxiv.org/pdf/2001.04180.pdf).
-
-## Features
-
-- Works on any website, with built-in options for YouTube, Facebook, Twitter, Instagram, LinkedIn, Google Search, and WhatsApp Web  
-- Hide any distracting element with a single click  
-- Cross-browser support (Safari, Chrome, Firefox)  
-- Lightweight and privacy-friendly
+<a href='https://apps.apple.com/gb/app/redd-focus-hide-distractions/id1660218371'><img height=58 alt='Download on the App Store' src='https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg'/></a>
+<a href='https://chromewebstore.google.com/detail/redd-focus-hide-distracti/hhblkhfdjijdinijakbmcpkmdfhoadcd'><img height=58 alt='Available in the Chrome Web Store' src='https://developer.chrome.com/static/docs/webstore/branding/image/UV4C4ybeBTsZt43U4xis.png'/></a>
+<a href='https://microsoftedge.microsoft.com/addons/detail/digital-habits-focus/gmjfgjdhnhcegfelcddbdljdffiaepam'><img height=58 alt='Get it from Microsoft Edge' src='docs/badges/get-it-from-microsoft-edge.png'/></a>
+<a href='https://addons.mozilla.org/firefox/addon/digitalhabits-focus/'><img height=58 alt='Get the add-on for Firefox' src='https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg'/></a>
 
 ## Demo
 
-[![Watch the video](https://img.youtube.com/vi/SsW5laIOJIw/0.jpg)](https://www.youtube.com/watch?v=xWbQYYvyUDY)
+<a href="https://digitalhabits.org/tools/focus"><img src="docs/demo.gif" alt="Digital Habits: Focus hiding Shorts and recommended videos on YouTube" width="100%"/></a>
 
-## Screenshots
+## What the Extension Does
 
-<p align="center">
-  <img src="./docs/screenshots/RF-git-1.2.png" alt="Digital Habits: Focus — 1" width="49%" />
-  <img src="./docs/screenshots/RF-git-4.png" alt="Digital Habits: Focus — 2" width="49%" />
-</p>
-<p align="center">
-  <img src="./docs/screenshots/RF-git-5.png" alt="Digital Habits: Focus — 3" width="49%" />
-  <img src="./docs/screenshots/RF-git-6.png" alt="Digital Habits: Focus — 4" width="49%" />
-</p>
+Everywhere you go online, something tries to grab your attention. Digital Habits: Focus lets you decide what you see.
 
-## Installation
+The extension can help you:
+- hide feeds, recommendations, Shorts, comments and other distracting sections, with ready-made options for YouTube, Facebook, X, Instagram, LinkedIn, Reddit, Google Search and WhatsApp Web
+- hide any part of any other website, by picking it on the page
+- make a website greyscale, so it is less tempting
+- add a delay before a website opens, with a message that asks what you came to do
+- redirect a website to somewhere else
+- lock your settings, so changing them takes a short wait
 
-- **[Chrome Web Store](https://chromewebstore.google.com/detail/redd-focus-hide-distracti/hhblkhfdjijdinijakbmcpkmdfhoadcd?hl=en-GB)**
-- **[Firefox Add-ons](https://addons.mozilla.org/en-GB/firefox/addon/digitalhabits-focus/)**  
-- **[Apple App Store](https://apps.apple.com/gb/app/mindshield/id1660218371)**  
+On iPhone and iPad, the extension changes how sites look in Safari. It cannot change the apps.
 
-## iOS Usage Tip
+## How It Works
 
-On mobile Safari, you can create shortcuts to open distracting websites directly in the browser (bypassing their apps) and then delete the apps from your device. Example for iPhone:  
+Click the Focus icon in your browser's toolbar to see the options for the website you are on. Tick the parts you want to hide, or turn on Greyscale, Delay or Redirect.
 
-1. Open the **Shortcuts** app.  
-2. Create a new shortcut (**+** button).  
-3. Search for the **Open URL** action and enter, e.g., `https://www.instagram.com`.  
-4. Tap the **Share** icon in the top-right and select **Add to Home Screen**.  
+To hide anything else, click **Pick…** and click the part of the page you want gone. Before anything is hidden, you can make the area larger or smaller, then click **Hide**. You can give each hidden part a name, and show it again from the popup at any time.
+
+Your choices are kept per website. To try something for one visit only, turn off **Auto-save changes to hidden elements** in Settings.
+
+## Privacy
+
+Digital Habits: Focus:
+- runs entirely in your browser
+- does not require an account
+- does not collect personal data, the sites you visit or your settings
+- keeps your settings in your browser's own storage
+
+In Chrome, Edge and Safari, it sends one anonymous count a day, with an ID that changes every month, so we know how many people use it. You can turn this off in Settings, under Admin. Firefox sends no count.
+
+## Documentation
+
+- General project overview: this README
+- Release notes: [`changelog.md`](changelog.md), written as [`changelog-style.md`](changelog-style.md) describes
+- Releases and store uploads: [`docs/app-store-ci.md`](docs/app-store-ci.md)
+- Built-in options for each site: [`Shared (Extension)/Resources/selectors.js`](Shared%20(Extension)/Resources/selectors.js)
+- Security: [`SECURITY.md`](SECURITY.md)
 
 ## Development
 
-To run this locally:  
+The extension's code is in [`Shared (Extension)/Resources`](Shared%20(Extension)/Resources). The same files are used in every browser.
 
-1. Install Xcode  
-2. Clone or download the repository  
-3. Open the project in Xcode  
-4. Click the **Play** button  
+- **Safari (Mac, iPhone, iPad):** open `Digital Habits Focus.xcodeproj` in Xcode and click **Run**.
+- **Chrome or Edge:** open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and choose `Shared (Extension)/Resources`.
+- **Firefox:** open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on…** and choose `Shared (Extension)/Resources/manifest.json`.
 
-## Releasing
+## Contributing
 
-See [`changelog-style.md`](changelog-style.md) for how to write release notes,
-[`changelog.md`](changelog.md) for the notes themselves, and
-[`docs/app-store-ci.md`](docs/app-store-ci.md) for GitHub Release + App Store
-Connect / add-on store CI (Mac, iOS, Firefox, and optional Chrome/Edge).
+Contributions are welcome.
+
+Websites change their pages often, and the built-in options then stop working. If you want to fix or add one:
+1. Find the option in [`selectors.js`](Shared%20(Extension)/Resources/selectors.js).
+2. Test the change on the website, logged in and logged out, on a computer and on a phone if you can.
+3. Submit a pull request that says which part of the page the change affects.
+
+You can also report a bug or suggest an idea in [Issues](https://github.com/digitalhabits/dh-focus/issues), or email [team@digitalhabits.org](mailto:team@digitalhabits.org).
