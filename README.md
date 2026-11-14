@@ -24,7 +24,7 @@ It is made by the not-for-profit [Centre for Digital Habits](https://digitalhabi
 
 <a href="https://digitalhabits.org/tools/focus"><img src="docs/demo.gif" alt="Digital Habits: Focus hiding Shorts and recommended videos on YouTube" width="100%"/></a>
 
-## What the Extension Does
+## What the extension does
 
 The extension makes it easier to control your time & attention online, by letting you:
 - hide distracting elements, like algorithmic feeds, Shorts, or comments, with ready-made options for YouTube, Facebook, X, Instagram, LinkedIn, Reddit, Google Search and WhatsApp Web
@@ -34,7 +34,7 @@ The extension makes it easier to control your time & attention online, by lettin
 - redirect a website to somewhere else
 - lock your settings, so changing them takes a short wait
 
-## How It Works
+## How it works
 
 Click the Focus icon in your browser's toolbar to see the options for the website you are on. Tick the parts you want to hide, or turn on Greyscale, Delay or Redirect.
 
