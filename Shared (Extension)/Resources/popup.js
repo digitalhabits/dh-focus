@@ -1185,6 +1185,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             return;
                         }
                         chrome.tabs.sendMessage(tabs[0].id, { type: 'getSessionOverrides' }, function (response) {
+                            void chrome.runtime.lastError; // no content script on this page
                             if (response && response.overrides) {
                                 applyOverridesToUI(response.overrides);
                             }
@@ -1268,7 +1269,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 // session-only override for the active tab
                 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                     if (tabs && tabs[0]) {
-                        chrome.tabs.sendMessage(tabs[0].id, { type: 'sessionOverride', key: storageKey, value: value });
+                        chrome.tabs.sendMessage(tabs[0].id, { type: 'sessionOverride', key: storageKey, value: value }, function () { void chrome.runtime.lastError; });
                     }
                 });
             }
@@ -1544,6 +1545,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             type: 'removeSessionSelector',
                             selector: selector
                         }, function (response) {
+                            void chrome.runtime.lastError; // no content script on this page
                             // Use the fresh response from content script
                             if (response && response.customSelectors) {
                                 updateCustomElementsList(siteIdentifier, response.customSelectors);
@@ -1680,6 +1682,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 newSelector: newSelector,
                                 newName: newName
                             }, function (response) {
+                                void chrome.runtime.lastError; // no content script on this page
                                 // Also edit in storage (regardless of rememberSettingsEnabled)
                                 const storageKey = `${siteIdentifier}CustomHiddenElements`;
                                 chrome.storage.sync.get(storageKey, function (result) {
@@ -3021,6 +3024,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                             if (!tabs || !tabs[0]) return;
                             chrome.tabs.sendMessage(tabs[0].id, { type: 'getSessionOverrides' }, function (response) {
+                                void chrome.runtime.lastError; // no content script on this page
                                 if (response && response.overrides) {
                                     applyOverridesToUI(response.overrides);
                                 }
@@ -3052,6 +3056,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 return;
                             }
                             chrome.tabs.sendMessage(tabs[0].id, { type: 'getSessionOverrides' }, function (response) {
+                                void chrome.runtime.lastError; // no content script on this page
                                 if (!response) {
                                     saveBtn.textContent = originalLabel;
                                     saveBtn.disabled = false;
@@ -3069,7 +3074,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 }
                                 Promise.all(writes).then(() => {
                                     // Clear session selectors since they're now saved to storage
-                                    chrome.tabs.sendMessage(tabs[0].id, { type: 'clearSessionSelectors' });
+                                    chrome.tabs.sendMessage(tabs[0].id, { type: 'clearSessionSelectors' }, function () { void chrome.runtime.lastError; });
 
                                     saveBtn.textContent = 'Saved!';
                                     saveBtn.classList.add('is-success');
