@@ -8,6 +8,71 @@ platform tags, and Internal). Store “What’s New” / AMO notes are generated
 `scripts/changelog-to-store-whats-new.js` (excludes Internal; keeps untagged
 plus platform-relevant tags; strips markdown).
 
+## v6.11.0
+
+This update comes with some useful new features, design improvements, and under-the-hood improvements.
+
+### Branding
+
+- [macos] The setup guide in the app shows the new Digital Habits: Focus name.
+- [ios] The setup guide in the app shows the new Digital Habits: Focus name.
+
+### Hide Distracting Elements
+
+- Hiding part of a page now takes two steps: click it to select it, then
+  click Hide. Before you hide it, you can make the area larger or smaller,
+  also with the arrow keys.
+- After you hide something, you can give it a name or undo it straight away.
+  When you are done, a note says how many items are hidden on the page.
+- Pick mode has a Done button next to the outline, and ends when you press
+  Esc or go to another tab.
+- If a page was open before Focus was installed or updated, the popup now asks
+  you to reload it, instead of Pick… and the options doing nothing.
+- YouTube: fixed hiding the Subscriptions link when you are logged out.
+
+### Redirects
+
+- A redirect to another page on the same site, such as YouTube to your
+  Subscriptions, now only applies on the site's home page, so links to videos
+  and posts still open. Tick "Always load … on this page" to redirect every
+  page, as before.
+- A redirect to a site Focus knows, such as instagram.com, goes to its www
+  address.
+- Pressing Enter in the redirect address saves it and closes the panel, like
+  Done.
+
+### Digital Habits: Blocker Integration
+
+- [chrome] On Windows, Digital Habits: Blocker can now open the Focus page in
+  Chrome's extension settings.
+- [edge] On Windows, Digital Habits: Blocker can now open the Focus page in
+  Edge's extension settings.
+
+### Privacy
+
+- [macos] The switch for the anonymous usage count is now under Admin at the
+  bottom of Settings.
+- [ios] You can now turn off the anonymous usage count on iPhone and iPad,
+  under Admin at the bottom of Settings.
+- [chrome] The switch for the anonymous usage count is now under Admin at the
+  bottom of Settings.
+- [edge] The switch for the anonymous usage count is now under Admin at the
+  bottom of Settings.
+
+### Fixes & Polish
+
+- A new look in light mode, with the colours and font of the Centre for
+  Digital Habits website, in the popup, Settings, the blocked page and the
+  picker.
+- The design of the Settings screen has been improved, and the popup is taller
+  while Settings is open.
+
+### Internal
+
+- Rewrote the README, with a demo and links to every store.
+- Added a security policy, and pinned and update-checked the GitHub Actions
+  the build uses.
+
 ## v6.10.0
 
 This update comes with some useful new features, design improvements, and under-the-hood improvements.
