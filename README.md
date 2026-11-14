@@ -10,10 +10,15 @@ Digital Habits: Focus is a browser extension that makes distracting websites les
 
 It is made by the not-for-profit [Centre for Digital Habits](https://digitalhabits.org) and [backed by research](https://arxiv.org/pdf/2001.04180.pdf) at the universities of Oxford, Copenhagen and Maastricht.
 
-<a href='https://apps.apple.com/gb/app/redd-focus-hide-distractions/id1660218371'><img height=58 alt='Download on the App Store' src='https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg'/></a>
-<a href='https://chromewebstore.google.com/detail/redd-focus-hide-distracti/hhblkhfdjijdinijakbmcpkmdfhoadcd'><img height=58 alt='Available in the Chrome Web Store' src='https://developer.chrome.com/static/docs/webstore/branding/image/UV4C4ybeBTsZt43U4xis.png'/></a>
-<a href='https://microsoftedge.microsoft.com/addons/detail/digital-habits-focus/gmjfgjdhnhcegfelcddbdljdffiaepam'><img height=58 alt='Get it from Microsoft Edge' src='docs/badges/get-it-from-microsoft-edge.png'/></a>
-<a href='https://addons.mozilla.org/firefox/addon/digitalhabits-focus/'><img height=58 alt='Get the add-on for Firefox' src='https://blog.mozilla.org/addons/files/2020/04/get-the-addon-fx-apr-2020.svg'/></a>
+<!-- Badges: each store's own artwork, saved at 120px tall and shown at 60
+     (Chrome's a little bigger, as its white frame makes it look smaller). -->
+<a href='https://chromewebstore.google.com/detail/redd-focus-hide-distracti/hhblkhfdjijdinijakbmcpkmdfhoadcd'><img width=219 alt='Available in the Chrome Web Store' src='docs/badges/available-in-the-chrome-web-store.png'/></a>
+<a href='https://apps.apple.com/gb/app/redd-focus-hide-distractions/id1660218371'><img width=180 alt='Download on the App Store' src='docs/badges/download-on-the-app-store.png'/></a>
+<a href='https://microsoftedge.microsoft.com/addons/detail/digital-habits-focus/gmjfgjdhnhcegfelcddbdljdffiaepam'><img width=227 alt='Get it from Microsoft Edge' src='docs/badges/get-it-from-microsoft-edge.png'/></a>
+<a href='https://addons.mozilla.org/firefox/addon/digitalhabits-focus/'><img width=172 alt='Get the add-on for Firefox' src='docs/badges/get-the-add-on-for-firefox.png'/></a>
+
+> [!NOTE]
+> On iPhone and iPad, the extension changes how sites look in Safari. It cannot change the apps. To change apps on Android, for example to make them easier to handle with ADHD, use our sister app [Digital Habits: Focus for Android](https://play.google.com/store/apps/details?id=net.kollnig.greasemilkyway) on Google Play.
 
 ## Demo
 
@@ -21,17 +26,13 @@ It is made by the not-for-profit [Centre for Digital Habits](https://digitalhabi
 
 ## What the Extension Does
 
-Everywhere you go online, something tries to grab your attention. Digital Habits: Focus lets you decide what you see.
-
-The extension can help you:
-- hide feeds, recommendations, Shorts, comments and other distracting sections, with ready-made options for YouTube, Facebook, X, Instagram, LinkedIn, Reddit, Google Search and WhatsApp Web
-- hide any part of any other website, by picking it on the page
+The extension makes it easier to control your time & attention online, by letting you:
+- hide distracting elements, like algorithmic feeds, Shorts, or comments, with ready-made options for YouTube, Facebook, X, Instagram, LinkedIn, Reddit, Google Search and WhatsApp Web
+- hide custom elements on any website
 - make a website greyscale, so it is less tempting
 - add a delay before a website opens, with a message that asks what you came to do
 - redirect a website to somewhere else
 - lock your settings, so changing them takes a short wait
-
-On iPhone and iPad, the extension changes how sites look in Safari. It cannot change the apps.
 
 ## How It Works
 
@@ -54,8 +55,7 @@ In Chrome, Edge and Safari, it sends one anonymous count a day, with an ID that 
 ## Documentation
 
 - General project overview: this README
-- Release notes: [`changelog.md`](changelog.md), written as [`changelog-style.md`](changelog-style.md) describes
-- Releases and store uploads: [`docs/app-store-ci.md`](docs/app-store-ci.md)
+- Release notes: [`changelog.md`](changelog.md)
 - Built-in options for each site: [`Shared (Extension)/Resources/selectors.js`](Shared%20(Extension)/Resources/selectors.js)
 - Security: [`SECURITY.md`](SECURITY.md)
 
