@@ -1,17 +1,18 @@
 (function () {
 
     // --- All helper functions are defined first, making them available to the entire script ---
-    // ReDD design language (light / dark surfaces) — align with design-language/redd-design-tokens.json
+    // Centre for Digital Habits design system (light), as in popup.css and
+    // To-Do: cream, ink, green. Dark surfaces keep their own colours.
     const REDD = {
-        canvas: '#faf8f5',
-        navy: '#1e2d3e',
-        body: '#2c2c35',
-        muted: '#696977',
-        borderSubtle: '#e1dcd6',
-        teal: '#2a9d8f',
-        tealHover: '#248a7e',
+        canvas: '#f5f1ea',
+        navy: '#1b3d4a',
+        body: '#1b3d4a',
+        muted: '#586f77',
+        borderSubtle: '#d2d4d0',
+        teal: '#005d53',
+        tealHover: '#004d45',
         card: '#ffffff',
-        tealSoft: '#e5f5f3',
+        tealSoft: '#dbf0ea',
         dark: {
             surface: 'rgba(30, 41, 59, 0.96)',
             text: '#f1f5f9',
@@ -277,11 +278,11 @@
 
     const PICKER_FONT = 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif';
     const PICK_ORANGE = '#e07a3f';      // outlines: dashed on hover, solid once chosen
-    const PICK_GREEN = '#1f6b61';       // the tab on a chosen area, and the hidden-area box
-    const PICK_GREEN_HOVER = '#185850';
-    const PICK_CHIP = '#d6eeea';        // Hide, light on the green tab
-    const PICK_CHIP_HOVER = '#c0e4de';
-    const PICK_INK = '#22303f';         // the hint tag and the closing note
+    const PICK_GREEN = '#005d53';       // the tab on a chosen area, and the hidden-area box
+    const PICK_GREEN_HOVER = '#004d45';
+    const PICK_CHIP = '#dbf0ea';        // Hide, light on the green tab
+    const PICK_CHIP_HOVER = '#c6e6dd';
+    const PICK_INK = '#1b3d4a';         // the hint tag and the closing note
     const PICK_UI_ATTR = 'data-redd-picker-ui';
 
     function namingColors() {
@@ -1147,6 +1148,7 @@
         try { window.focus(); } catch (e) { /* not allowed */ }
         window.addEventListener('scroll', followHighlightOnScroll, { capture: true, passive: true });
         window.addEventListener('resize', followHighlightOnScroll, { passive: true });
+        document.addEventListener('visibilitychange', stopSelectingWhenTabLeft);
 
         notifySelectionState();
     }
@@ -1167,6 +1169,15 @@
         } catch (e) { /* extension reloaded; nothing to tell */ }
     }
 
+    /*
+     * Going to another tab ends pick mode, as Done does: a name being typed
+     * is kept, and an area chosen but not hidden is let go. Opening Focus's
+     * own popup doesn't hide the page, so it doesn't end it.
+     */
+    function stopSelectingWhenTabLeft() {
+        if (document.visibilityState === 'hidden') stopSelecting(true);
+    }
+
     function stopSelecting(cancelled = false) {
         if (!isSelecting) return;
         isSelecting = false;
@@ -1182,6 +1193,7 @@
         window.removeEventListener('keydown', handleKeydown, { capture: true });
         window.removeEventListener('scroll', followHighlightOnScroll, { capture: true });
         window.removeEventListener('resize', followHighlightOnScroll);
+        document.removeEventListener('visibilitychange', stopSelectingWhenTabLeft);
         [selectionCaptureLayer, highlightOverlay, hoverTag, selectionOverlay, touchBar].forEach(el => el && el.remove());
         const tempStyle = document.getElementById(highlightStyleId);
         if (tempStyle) tempStyle.remove();
@@ -1190,7 +1202,8 @@
         refreshGrayscaleFilter();
         // Keep sessionHiddenSelectors so session rules persist until refresh
 
-        if (hiddenThisRound > 0) showPickerNote();
+        // Not after leaving the tab: the note would fade before anyone saw it.
+        if (hiddenThisRound > 0 && !cancelled) showPickerNote();
         hiddenThisRound = 0;
         notifySelectionState();
     }

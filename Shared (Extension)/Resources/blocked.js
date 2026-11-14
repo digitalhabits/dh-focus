@@ -84,7 +84,7 @@
       const l = 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b;
       // Dark text uses --redd-navy for parity with the rest of the
       // ReDD design language (matches redd-block + extension popup).
-      return l > 150 ? "#1e2d3e" : "#fff";
+      return l > 150 ? "#1b3d4a" : "#fff";
     } catch {
       return "#fff";
     }

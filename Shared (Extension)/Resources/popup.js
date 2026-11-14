@@ -221,8 +221,9 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!toggle) return;
 
             if (chrome.runtime.getURL('').startsWith('moz-extension://')) {
-                const row = toggle.closest('.settings-row');
-                if (row) row.style.display = 'none';
+                // The switch is all the Admin section holds, so hide the section.
+                const section = toggle.closest('.settings-section') || toggle.closest('.settings-row');
+                if (section) section.style.display = 'none';
                 return;
             }
 
@@ -687,6 +688,8 @@ document.addEventListener('DOMContentLoaded', function () {
             faqDropdown.style.display = 'block';
             faqOverlay.style.display = 'block';
             document.body.classList.add('modal-open');
+            // The popup grows to its full height while Settings is open (popup.css).
+            document.body.classList.add('settings-open');
             setupSettingsPanelTabOrder(options || {});
 
             const scrollToId = options && options.scrollToId;
@@ -708,6 +711,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (faqDropdown) faqDropdown.style.display = 'none';
             if (faqOverlay) faqOverlay.style.display = 'none';
             document.body.classList.remove('modal-open');
+            document.body.classList.remove('settings-open');
             if (settingsTabTrapHandler) {
                 document.removeEventListener('keydown', settingsTabTrapHandler);
                 settingsTabTrapHandler = null;
@@ -2773,11 +2777,48 @@ document.addEventListener('DOMContentLoaded', function () {
             addButton.textContent = active ? 'Click to hide' : 'Pick…';
         }
 
+        /*
+         * A tab opened before Focus was installed, updated or reloaded has no
+         * Focus script in it (browsers add it to new page loads only), so
+         * nothing there answers the popup, and Pick… and the options did
+         * nothing until the page was reloaded. Say so, with a button that
+         * reloads it.
+         */
+        function showPageNeedsReload(tabId) {
+            if (document.getElementById('page-needs-reload')) return;
+            const scroll = document.querySelector('#popup-content .popup-main-scroll');
+            if (!scroll) return;
+            const note = document.createElement('div');
+            note.id = 'page-needs-reload';
+            note.className = 'page-needs-reload';
+            note.setAttribute('role', 'status');
+            const text = document.createElement('p');
+            text.textContent = 'Reload this page to use Focus on it.';
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = 'Reload page';
+            button.addEventListener('click', function () {
+                chrome.tabs.reload(tabId, {}, function () {
+                    void chrome.runtime.lastError;
+                    window.close();
+                });
+            });
+            note.appendChild(text);
+            note.appendChild(button);
+            scroll.insertBefore(note, scroll.firstChild);
+        }
+
         function setActiveTabSelection(active) {
             chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                 if (!tabs || !tabs[0]) return;
                 chrome.tabs.sendMessage(tabs[0].id, { type: 'setSelectionActive', active: active }, function (response) {
-                    if (chrome.runtime.lastError || !response) return;
+                    if (chrome.runtime.lastError) {
+                        // No Focus script on the page: pick mode did not start.
+                        showSelectionState(false);
+                        showPageNeedsReload(tabs[0].id);
+                        return;
+                    }
+                    if (!response) return;
                     showSelectionState(response.active === true);
                 });
             });
@@ -2787,7 +2828,11 @@ document.addEventListener('DOMContentLoaded', function () {
             chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
                 if (!tabs || !tabs[0]) return;
                 chrome.tabs.sendMessage(tabs[0].id, { type: 'getSelectionState' }, function (response) {
-                    if (chrome.runtime.lastError || !response) return;
+                    if (chrome.runtime.lastError) {
+                        showPageNeedsReload(tabs[0].id);
+                        return;
+                    }
+                    if (!response) return;
                     showSelectionState(response.active === true);
                 });
             });

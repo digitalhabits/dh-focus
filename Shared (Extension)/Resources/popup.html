@@ -634,19 +634,6 @@
                                             </label>
                                         </div>
                                     </div>
-                                    <div class="settings-row">
-                                        <div class="settings-row-copy">
-                                            <span class="settings-row-label">Send anonymous usage count</span>
-                                            <span class="settings-row-hint">At most once a day, with an ID that changes monthly. No sites or settings.</span>
-                                        </div>
-                                        <div class="settings-row-control">
-                                            <label class="enforcement-switch" for="usagePingToggle">
-                                                <input type="checkbox" id="usagePingToggle"
-                                                    name="usagePingToggle">
-                                                <span class="enforcement-slider"></span>
-                                            </label>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </section>
@@ -746,21 +733,42 @@
                     </div>
                 </div>
                             </div>
+                            <div id="settings-feedback-footer" class="settings-feedback-footer">
+                                <svg class="settings-feedback-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    aria-hidden="true">
+                                    <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+                                </svg>
+                                <p class="settings-feedback-text">
+                                    Found a bug or have a suggestion? Let us know on
+                                    <a href="https://github.com/digitalhabits/dh-focus/issues" target="_blank">GitHub</a>
+                                    or at
+                                    <a href="mailto:team@digitalhabits.org">team@digitalhabits.org</a>.
+                                </p>
+                            </div>
                         </section>
 
-                        <div id="settings-feedback-footer" class="settings-feedback-footer">
-                            <svg class="settings-feedback-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                aria-hidden="true">
-                                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
-                            </svg>
-                            <p class="settings-feedback-text">
-                                Found a bug or have a suggestion? Let us know on
-                                <a href="https://github.com/digitalhabits/dh-focus/issues" target="_blank">GitHub</a>
-                                or at
-                                <a href="mailto:team@digitalhabits.org">team@digitalhabits.org</a>.
-                            </p>
-                        </div>
+                        <section id="admin-section" class="settings-section">
+                            <h4 class="settings-section-heading">Admin</h4>
+                            <div class="settings-panel">
+                                <div class="settings-panel-rows">
+                                    <div class="settings-row">
+                                        <div class="settings-row-copy">
+                                            <span class="settings-row-label">Send anonymous usage count</span>
+                                            <span class="settings-row-hint">At most once a day, with an ID that changes monthly. No sites or settings.</span>
+                                        </div>
+                                        <div class="settings-row-control">
+                                            <label class="enforcement-switch" for="usagePingToggle">
+                                                <input type="checkbox" id="usagePingToggle"
+                                                    name="usagePingToggle">
+                                                <span class="enforcement-slider"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
                     </div>
                 </div>
 

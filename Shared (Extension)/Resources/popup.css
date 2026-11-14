@@ -1,49 +1,78 @@
 /* ========================================
    Theme Variables - Light Mode (default)
-   ReDD design language (design-language/redd-design-tokens.json)
+   Centre for Digital Habits design system, as on the website and in
+   To-Do: ink text, green actions, cream and sand, Schibsted Grotesk,
+   Georgia headings. Dark mode keeps its own colours.
    ======================================== */
+
+/* Schibsted Grotesk (Google Fonts, OFL; licence in images/fonts/OFL.txt),
+   the variable font, so every weight the popup uses is the real one. */
+@font-face {
+    font-family: 'Schibsted Grotesk';
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url('images/fonts/SchibstedGrotesk-Variable-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Schibsted Grotesk';
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: swap;
+    src: url('images/fonts/SchibstedGrotesk-Variable-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
 :root {
     color-scheme: light;
 
     /* Canonical palette (portable tokens) */
-    --redd-canvas: #faf8f5;
-    --redd-subtle: #f1eee9;
+    --redd-canvas: #f5f1ea;
+    --redd-subtle: #efeae2;
     --redd-card: #ffffff;
-    --redd-navy: #1e2d3e;
-    --redd-body: #2c2c35;
-    --redd-muted: #696977;
-    --redd-border-subtle: #e1dcd6;
-    --redd-teal: #2a9d8f;
-    --redd-teal-hover: #248a7e;
-    --redd-teal-soft: #e5f5f3;
+    --redd-navy: #1b3d4a;
+    --redd-body: #1b3d4a;
+    --redd-muted: #586f77;
+    --redd-border-subtle: #d2d4d0;
+    --redd-teal: #005d53;
+    --redd-teal-hover: #004d45;
+    --redd-teal-soft: #dbf0ea;
     --redd-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.08);
+    /* The green and the red as numbers, for see-through rings and washes:
+       rgba(var(--accent-rgb), 0.15) */
+    --accent-rgb: 0, 93, 83;
+    --danger: #b4432e;
+    --danger-rgb: 180, 67, 46;
+    /* Small labels and section names, one step lighter than the ink */
+    --text-label: #47616a;
 
     /* Background colors */
     --bg-primary: var(--redd-canvas);
     --bg-secondary: var(--redd-card);
     --bg-tertiary: var(--redd-subtle);
-    --bg-hover: #e8e4de;
+    --bg-hover: #e9e4da;
     --bg-input: var(--redd-card);
 
     /* Text colors */
     --text-primary: var(--redd-navy);
     --text-secondary: var(--redd-body);
     --text-muted: var(--redd-muted);
-    --text-subtle: #8a8a96;
-    --text-placeholder: #b0aeb8;
+    --text-subtle: #7a8d93;
+    --text-placeholder: #a3b1b5;
     --text-link: var(--redd-body);
     --text-link-hover: var(--redd-navy);
 
     /* Border colors */
     --border-color: var(--redd-border-subtle);
-    --border-hover: #d4cfc8;
+    --border-hover: #bfc4bf;
     --border-input: var(--redd-border-subtle);
     --border-focus: var(--redd-teal);
 
     /* Accent colors (primary actions = teal) */
     --accent-primary: var(--redd-teal);
     --accent-hover: var(--redd-teal-hover);
-    --accent-secondary: #4a90e2;
+    --accent-secondary: var(--redd-teal);
 
     /* Button colors */
     --btn-primary-bg: var(--redd-teal);
@@ -51,7 +80,7 @@
     --btn-primary-hover: var(--redd-teal-hover);
     --btn-secondary-bg: var(--redd-subtle);
     --btn-secondary-text: var(--redd-navy);
-    --btn-secondary-hover: #e8e4de;
+    --btn-secondary-hover: #e9e4da;
 
     /* "Hide element" / "Add CSS": white outlined chips; .active uses accent */
     --btn-custom-hide-bg: var(--redd-card);
@@ -62,7 +91,7 @@
     --btn-custom-hide-focus-ring: none;
 
     /* Toggle/Checkbox colors */
-    --toggle-bg: #c8c4be;
+    --toggle-bg: #c6cac5;
     --toggle-bg-checked: var(--redd-teal);
     --checkbox-bg: #ffffff;
     --checkbox-border: var(--redd-border-subtle);
@@ -75,13 +104,13 @@
 
     /* Modal/Dialog — match popup canvas (settings #faq-dropdown); edit dialog uses same */
     --modal-bg: var(--bg-primary);
-    --modal-overlay: rgba(30, 45, 62, 0.35);
+    --modal-overlay: rgba(27, 61, 74, 0.35);
     --modal-shadow: var(--redd-shadow-card);
 
     /* Unlock wait screen message (#delay-message) — tweak size here only */
     --unlock-wait-message-font-size: 1.3em;
     /* Redirect reverse-loop warning */
-    --redirect-loop-warning-color: #dc2626;
+    --redirect-loop-warning-color: var(--danger);
 
     /* Settings / FAQ panel (#faq-dropdown): full-bleed overlay; equal horizontal inset for content */
     --settings-overlay-padding-x: 1rem;
@@ -109,8 +138,8 @@
     /* Classic scrollbar gutter (see body / .popup-scroll styling). Overlay bars on
        macOS Chromium/Safari do not take layout width and overlap fixed chrome. */
     --scrollbar-size: 10px;
-    --scrollbar-thumb: #c8c4be;
-    --scrollbar-thumb-hover: #a8a49e;
+    --scrollbar-thumb: #c6cac5;
+    --scrollbar-thumb-hover: #a5aca8;
     --scrollbar-track: transparent;
 
     /* Icon colors */
@@ -118,21 +147,21 @@
     --icon-hover: var(--redd-navy);
 
     /* Misc */
-    --dropdown-shadow: 0 8px 24px rgba(30, 45, 62, 0.1);
+    --dropdown-shadow: 0 8px 24px rgba(27, 61, 74, 0.1);
     --message-bg: var(--redd-canvas);
 
     /* EULA / ReDD 2FA popup parity (legal onboarding) */
     --link-color: var(--accent-secondary);
     --link-hover: var(--accent-primary);
     --shadow-sm: var(--redd-shadow-card);
-    --shadow-md: 0 8px 24px rgba(30, 45, 62, 0.1);
+    --shadow-md: 0 8px 24px rgba(27, 61, 74, 0.1);
     --radius-sm: 8px;
     --radius-card: 12px;
     --font-heading: Georgia, "Times New Roman", serif;
-    --font-body: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
+    --font-body: "Schibsted Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
 
-    /* Settings panel (ReDD Blocker parity) */
-    --settings-panel-bg: var(--redd-subtle);
+    /* Settings panel: white cards on the cream, as in To-Do's Settings */
+    --settings-panel-bg: var(--redd-card);
     --settings-control-width: 140px;
     --border-color-medium: var(--border-color);
 }
@@ -156,6 +185,11 @@
     --redd-teal-hover: #4ec0b0;
     --redd-teal-soft: rgba(57, 158, 144, 0.16);
     --redd-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --accent-rgb: 42, 157, 143;
+    --danger: #dc2626;
+    --danger-rgb: 220, 38, 38;
+    --text-label: #4d4d57;
+    --redirect-loop-warning-color: #dc2626;
 
     /* Background colors */
     --bg-primary: var(--redd-canvas);
@@ -260,7 +294,7 @@ body {
     max-height: var(--popup-max-height);
     margin: 0;
     padding: 0;
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
+    font-family: var(--font-body);
     font-size: 1rem;
     text-align: center;
     background-color: var(--bg-primary);
@@ -291,6 +325,55 @@ textarea::placeholder {
     box-sizing: border-box;
 }
 
+/* The page has no Focus script yet (opened before Focus was installed or
+   updated): a note with a Reload button, at the top of the options. */
+.page-needs-reload {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 1rem 10px;
+    padding: 10px 10px 10px 12px;
+    border: 1px solid rgba(var(--accent-rgb), 0.22);
+    border-radius: var(--radius-sm);
+    background: var(--redd-teal-soft);
+    color: var(--text-primary);
+    text-align: left;
+}
+
+.page-needs-reload p {
+    flex: 1 1 auto;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+.page-needs-reload button {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.page-needs-reload button:hover {
+    background: var(--btn-primary-hover);
+}
+
+/* "Open a website tab to use …" and other pages Focus can't act on
+   (showUnsupportedPageMessage in popup.js): the one line, inset from the
+   popup's edges. */
+#popup-content > .error-message {
+    margin: 0;
+    padding: 28px 24px;
+    line-height: 1.45;
+    color: var(--text-primary);
+}
+
 .popup-sticky-header {
     flex: 0 0 auto;
     background-color: var(--bg-primary);
@@ -319,8 +402,9 @@ textarea::placeholder {
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    /* Room for the 2px focus ring + 2px offset, which the scrollport would clip. */
-    padding: 4px 1rem 0.5rem;
+    /* Room for the 2px focus ring + 2px offset, which the scrollport would clip;
+       more below, so the last option has room above the footer. */
+    padding: 4px 1rem 1rem;
     box-sizing: border-box;
 }
 
@@ -378,7 +462,7 @@ textarea::placeholder {
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #4d4d57;
+    color: var(--text-label);
     margin: 0 0 5px 0;
 }
 
@@ -420,7 +504,7 @@ textarea::placeholder {
     width: 1em;
     height: 1em;
     font-size: 0.88em;
-    color: #4d4d57;
+    color: var(--text-label);
     transform: rotate(0deg);
     transform-origin: 50% 50%;
     transition: transform 0.2s ease;
@@ -731,7 +815,7 @@ button[id$="ManualAddButton"] {
     text-align: center;
     font-size: 0.87em;
     font-weight: 600;
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
+    font-family: var(--font-body);
     line-height: 1.2;
     border-radius: 9px;
     cursor: pointer;
@@ -881,7 +965,7 @@ body.manual-css-enabled button[id$="ManualAddButton"] {
 
 .shadcn-input:focus {
     border-color: var(--border-focus);
-    box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.28);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.28);
 }
 
 .dark-mode .shadcn-input:focus {
@@ -1061,8 +1145,8 @@ footer {
     position: relative;
     text-align: center;
     font-style: normal;
-    padding: 10px 0;
-    font-size: 0.8em;
+    padding: 6px 0;
+    font-size: 0.75em;
     border-top: 1px solid var(--footer-border);
     width: 100%;
     background-color: var(--footer-bg);
@@ -1314,8 +1398,8 @@ p.how-to-description {
         flex: 0 0 auto;
         flex-grow: 0;
         flex-shrink: 0;
-        font-size: 0.8em;
-        padding: 10px 0;
+        font-size: 0.75em;
+        padding: 6px 0;
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
     }
@@ -1549,7 +1633,7 @@ p.how-to-description {
 
 .selector-input:focus {
     border-color: var(--border-focus);
-    box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.15);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
 }
 
 /* Dimmed centered modal (lock-start commitment dialog) */
@@ -1618,13 +1702,13 @@ p.how-to-description {
     padding: 0;
     border: none;
     border-radius: 8px;
-    background: rgba(220, 38, 38, 0.1);
-    color: #dc2626;
+    background: rgba(var(--danger-rgb), 0.1);
+    color: var(--danger);
     cursor: pointer;
 }
 
 .edit-dialog-trash:active {
-    background: rgba(220, 38, 38, 0.18);
+    background: rgba(var(--danger-rgb), 0.18);
 }
 
 .dark-mode .edit-dialog-trash {
@@ -1654,7 +1738,7 @@ p.how-to-description {
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #4d4d57;
+    color: var(--text-label);
 }
 
 .dark-mode .edit-dialog-field label {
@@ -1751,7 +1835,7 @@ p.how-to-description {
     border-radius: 8px;
     font-size: 14px;
     box-sizing: border-box;
-    font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif;
+    font-family: var(--font-body);
     background-color: var(--bg-input);
     color: var(--text-primary);
 }
@@ -1960,7 +2044,7 @@ p.how-to-description {
     border: 1px solid transparent;
     border-radius: 8px;
     background: none;
-    color: #dc2626;
+    color: var(--danger);
     font: inherit;
     font-size: 15px;
     font-weight: 500;
@@ -2117,10 +2201,13 @@ p.how-to-description {
 
 /* --- Destructive Hover State (for remove-symbol) --- */
 .remove-symbol:hover {
+    background-color: var(--danger);
+    border-color: var(--danger);
+}
+
+.dark-mode .remove-symbol:hover {
     background-color: #ef4444;
-    /* A modern, less harsh red */
     border-color: #dc2626;
-    /* A darker red for the border on hover */
 }
 
 /* Change icon stroke to white on destructive hover */
@@ -2309,6 +2396,16 @@ footer .friction-customisation {
 }
 
 /* Settings overlay — ReDD Blocker card layout */
+/* Settings is a fixed panel over the popup, so it is only as tall as the
+   page under it. While it is open the popup takes its full height, so
+   there is less to scroll. Desktop only: on iPhone and iPad the popup is a
+   sheet the system sizes. */
+@media (hover: hover) and (pointer: fine) {
+    body.settings-open {
+        height: var(--popup-max-height);
+    }
+}
+
 #faq-dropdown {
     display: none;
     flex-direction: column;
@@ -2382,7 +2479,7 @@ footer .friction-customisation {
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #4d4d57;
+    color: var(--text-label);
 }
 
 .dark-mode .settings-section-heading {
@@ -2533,7 +2630,7 @@ footer .friction-customisation {
 #faq-dropdown .settings-select-trigger:focus {
     outline: none;
     border-color: var(--border-focus);
-    box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.15);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
 }
 
 .settings-number-input:disabled,
@@ -2645,10 +2742,10 @@ footer .friction-customisation {
     align-items: flex-start;
     gap: 10px;
     padding: 12px 14px;
-    background: #e9f0ed;
-    border: 1px solid #ccd8d2;
+    background: var(--redd-teal-soft);
+    border: 1px solid rgba(var(--accent-rgb), 0.22);
     border-radius: 10px;
-    color: #2d5a4c;
+    color: var(--redd-teal);
 }
 
 .settings-feedback-icon {
@@ -2958,7 +3055,7 @@ footer .friction-customisation {
     /* (must match the JS setTimeout in popup.js) */
 
     /* Icon fill colors (ban = red, blur = grey, black = black, refresh = teal) */
-    --selector-color-ban: #dc2626;
+    --selector-color-ban: #b4432e;
     --selector-color-blur: var(--text-muted);
     --selector-color-black: #000;
     --selector-color-refresh: var(--accent-primary);
@@ -2969,7 +3066,7 @@ footer .friction-customisation {
     --selector-icon-black: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' fill='black'/></svg>");
     --selector-icon-refresh: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><path d='M3 12a9 9 0 0 1 15.3-6.36L21 8'/><path d='M21 3v5h-5'/><path d='M21 12a9 9 0 0 1-15.3 6.36L3 16'/><path d='M8 16H3v5'/></svg>");
     --selector-icon-check: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='black' d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z'/></svg>");
-    --selector-color-grayscale-check: #7a7a85;
+    --selector-color-grayscale-check: #586f77;
 }
 
 .dark-mode {
@@ -3197,7 +3294,7 @@ footer .friction-customisation {
     font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    color: #4d4d57;
+    color: var(--text-label);
 }
 
 .dark-mode .redirect-to-current-site-heading {
@@ -3242,7 +3339,7 @@ footer .friction-customisation {
     border: 1px solid transparent;
     border-radius: 4px;
     background: transparent;
-    color: #dc2626;
+    color: var(--danger);
     font-size: 18px;
     font-weight: 600;
     line-height: 1;
@@ -3252,7 +3349,7 @@ footer .friction-customisation {
 }
 
 .redirect-rule-remove:hover {
-    background-color: rgba(220, 38, 38, 0.1);
+    background-color: rgba(var(--danger-rgb), 0.1);
 }
 
 .redirect-rule-remove:focus {
@@ -3327,7 +3424,7 @@ footer .friction-customisation {
 .feature-panel .redirect-url-input:focus {
     outline: none;
     border-color: var(--border-focus);
-    box-shadow: 0 0 0 2px rgba(42, 157, 143, 0.15);
+    box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15);
 }
 
 .grayscale-controls .a-toggle.redirect-toggle.lock-protected:not(.redirect-url-locked) {
@@ -3483,7 +3580,7 @@ footer .friction-customisation {
 .hide-checkboxes .a-toggle:not(.grayscale-toggle):not(.access-delay-toggle):not(.redirect-toggle) input[type="checkbox"].loading + label::before,
 .hide-checkboxes .a-toggle .multi-state-checkbox.loading::before {
     animation: selector-rotate var(--selector-rotate-duration) linear;
-    box-shadow: 0 0 0 6px rgba(42, 157, 143, 0.22);
+    box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0.22);
 }
 
 .dark-mode .hide-checkboxes .a-toggle:not(.grayscale-toggle):not(.access-delay-toggle):not(.redirect-toggle) input[type="checkbox"].loading + label::before,
@@ -3517,7 +3614,7 @@ footer .friction-customisation {
 
 .hide-checkboxes .a-toggle input[type="checkbox"]:focus-visible + label::before,
 .hide-checkboxes .a-toggle .multi-state-checkbox:focus-visible::before {
-    box-shadow: 0 0 0 6px rgba(42, 157, 143, 0.22);
+    box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0.22);
 }
 
 .dark-mode .hide-checkboxes .a-toggle input[type="checkbox"]:focus-visible + label::before,
@@ -3796,7 +3893,7 @@ body.eula-gate-active {
 
 /* Keyboard focus: ring on drawn box (selector-style) */
 .eula-card .eula-checkbox-row.eula-custom-checkbox input[type="checkbox"]:focus-visible + .eula-checkbox-label::before {
-    box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.3);
+    box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.3);
 }
 
 .dark-mode .eula-card .eula-checkbox-row.eula-custom-checkbox input[type="checkbox"]:focus-visible + .eula-checkbox-label::before {
