@@ -131,7 +131,7 @@
     /*
      * Hiding takes two steps, like Safari's Hide Distracting Items: a click
      * chooses an area, then Hide (or Enter) hides it. Until then the area is
-     * pending, with a tab on its outline. "Smaller" steps into the item
+     * pending, with a tab on its outline. "Down" steps into the item
      * nearest pendingPoint (where it was chosen, in page coordinates).
      */
     let selectionOverlay = null;
@@ -423,9 +423,9 @@
         svg.appendChild(path);
         return svg;
     }
-    // Arrows pointing out of the corners, and into them; a cross.
-    const ICON_LARGER = 'M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9';
-    const ICON_SMALLER = 'M13.5 2.5 9.5 6.5M9.5 3v3.5H13M2.5 13.5l4-4M6.5 13V9.5H3';
+    // Chevrons up and down, and a cross.
+    const ICON_UP = 'M3.5 10 8 5.5l4.5 4.5';
+    const ICON_DOWN = 'M3.5 6 8 10.5 12.5 6';
     const ICON_CLOSE = 'M4 4l8 8M12 4l-8 8';
 
     /** Our own element, styled inline so the page's CSS can't reshape it. */
@@ -491,6 +491,12 @@
         button.addEventListener('mouseleave', () => paint(false));
         // A ring only for keyboard focus, as :focus-visible can't be inline.
         button.addEventListener('focus', () => {
+            // Focus we move here ourselves (Hide, on choosing an area) shows no ring:
+            // Safari counts it as keyboard focus.
+            if (button.dataset.quietFocus) {
+                delete button.dataset.quietFocus;
+                return;
+            }
             let visible = true;
             try { visible = button.matches(':focus-visible'); } catch (e) { /* old browser */ }
             if (visible) s.outline = '2px solid #7fa8ff';
@@ -721,14 +727,14 @@
     }
 
     /*
-     * Areas: what Larger and Smaller step through. Pages nest many
+     * Areas: what Up and Down step through. Pages nest many
      * elements in one box (a link around a span of the same size) or in no
      * box at all (display: contents), so stepping element by element repeats
      * boxes and puts siblings at different depths. An area is the outermost
      * element of a run showing the same box; its items are the next boxes
      * inside it. A box whose only item shows the same content (a heading
      * around its line of text, a menu around its button) is one level, not
-     * two. Larger, Smaller and the tab's count all use this.
+     * two. Up, Down and the tab's count all use this.
      */
     function sameBox(a, b) {
         return Math.abs(a.left - b.left) < 1 && Math.abs(a.top - b.top) < 1 &&
@@ -878,31 +884,46 @@
 
         const hideButton = makePickerButton('Hide', 'chip', confirmPendingHide);
         hideButton.dataset.pickHide = '1';
+        // As much room after Hide as the area's name leaves before it.
+        hideButton.style.marginRight = '6px';
         pickTab.appendChild(hideButton);
-        if (parentArea(pendingElement)) {
-            const larger = makePickerButton('Larger', 'ghost', growPendingArea, ICON_LARGER);
-            larger.title = 'Select a larger area (↑)';
-            pickTab.appendChild(larger);
-        }
-        if (childAreas(pendingElement).length > 0) {
-            const smaller = makePickerButton('Smaller', 'ghost', shrinkPendingArea, ICON_SMALLER);
-            smaller.title = 'Back to the smaller area (↓)';
-            pickTab.appendChild(smaller);
-        }
+        // Narrow (phones): chevrons only, so the row fits.
+        const narrow = isNarrowView();
+        const level = (name, onActivate, icon, title) => {
+            const button = makePickerButton(narrow ? '' : name, 'ghost', onActivate, icon);
+            button.setAttribute('aria-label', name);
+            button.title = title;
+            // Tighter than other buttons: "Up" and Down's chevron sat 24px apart.
+            button.style.padding = '6px';
+            pickTab.appendChild(button);
+        };
+        if (parentArea(pendingElement)) level('Up', growPendingArea, ICON_UP, 'Up: the area around (↑)');
+        if (childAreas(pendingElement).length > 0) level('Down', shrinkPendingArea, ICON_DOWN, 'Down: an area inside (↓)');
         const close = makePickerButton('', 'ghost', () => cancelPending(), ICON_CLOSE);
         close.setAttribute('aria-label', 'Cancel');
         close.title = 'Cancel (Esc)';
         pickTab.appendChild(close);
+        // Only the name gives way when the row is tight; buttons never squash together.
+        Array.from(pickTab.children).forEach(child => { if (child !== label) child.style.flex = 'none'; });
 
         placePickTab();
         // Enter hides, so focus starts on Hide. Again once the choosing click
         // has finished: Safari kept the arrow keys from the page until a
         // second click otherwise.
         const focusHide = () => {
-            if (hideButton.isConnected) hideButton.focus({ preventScroll: true });
+            if (!hideButton.isConnected || document.activeElement === hideButton) return;
+            hideButton.dataset.quietFocus = '1';
+            hideButton.focus({ preventScroll: true });
+            // Not focused after all: don't let the flag swallow a later Tab's ring.
+            if (document.activeElement !== hideButton) delete hideButton.dataset.quietFocus;
         };
         try { focusHide(); } catch (e) { /* not focusable yet */ }
         setTimeout(focusHide, 0);
+    }
+
+    // Phones: Up and Down show only their chevrons, so the tab fits.
+    function isNarrowView() {
+        return (document.documentElement.clientWidth || window.innerWidth) < 600;
     }
 
     function placePickTab() {
@@ -1369,7 +1390,7 @@
         }
         if (!pendingElement) return;
         if (event.key === 'Enter') {
-            // A focused "Larger", "Smaller" or × keeps its own Enter.
+            // A focused "Up", "Down" or × keeps its own Enter.
             const onOtherButton = target instanceof Element &&
                 target.closest('button') && pickTab && pickTab.contains(target) && !target.hasAttribute('data-pick-hide');
             if (onOtherButton) return;
