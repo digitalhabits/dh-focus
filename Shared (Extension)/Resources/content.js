@@ -1169,7 +1169,10 @@
             const merged = mergeWithSession(saved);
             applyCustomElementStyles(currentSiteIdentifier, merged);
             if (wasSaved) {
-                chrome.storage.sync.set({ [storageKey]: saved });
+                // Safari rejects saving an empty list to storage.sync ("Exceeded storage
+                // quota"); no list reads the same, so delete the key instead.
+                if (saved.length) chrome.storage.sync.set({ [storageKey]: saved });
+                else chrome.storage.sync.remove(storageKey);
             } else {
                 chrome.runtime.sendMessage({ type: 'sessionSelectorsChanged', siteIdentifier: currentSiteIdentifier, selectors: merged }, function () { void chrome.runtime.lastError; });
             }

@@ -1542,6 +1542,20 @@ document.addEventListener('DOMContentLoaded', function () {
             cancelBtn.addEventListener('click', closeDialog);
         }
 
+        /*
+         * Save a site's picks. Safari (seen on iOS 26) rejects saving an empty list to
+         * storage.sync with "Exceeded storage quota", so removing the last pick silently
+         * kept it. No list and an empty list read the same, so delete the key instead.
+         */
+        function savePicks(storageKey, picks, callback) {
+            const done = function () {
+                if (chrome.runtime.lastError) console.error('Could not save picks:', chrome.runtime.lastError.message);
+                if (callback) callback();
+            };
+            if (picks.length) chrome.storage.sync.set({ [storageKey]: picks }, done);
+            else chrome.storage.sync.remove(storageKey, done);
+        }
+
         // Remove a pick from storage and from the page's session, then redraw the list.
         function removePick(siteIdentifier, selector) {
             chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -1555,7 +1569,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         (typeof s === 'string' ? s : s.selector) !== selector
                     );
 
-                    chrome.storage.sync.set({ [storageKey]: currentSelectors }, function () {
+                    savePicks(storageKey, currentSelectors, function () {
                         // Then remove from session memory and reapply styles
                         chrome.tabs.sendMessage(tabs[0].id, {
                             type: 'removeSessionSelector',
@@ -1774,6 +1788,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             console.log('Updated container content for', containerId, ':', container.innerHTML);
+            // Safari doesn't recheck the CSS :has(+ :empty) rule when the last pick is
+            // removed, so hide or show the "Your picks" heading here as well.
+            const picksHeading = container.previousElementSibling;
+            if (picksHeading && picksHeading.classList.contains('your-picks-heading')) {
+                picksHeading.style.display = container.children.length ? 'block' : 'none';
+            }
             updatePickLockUI();
             setupPopupTabOrder();
         }
@@ -3131,7 +3151,10 @@ document.addEventListener('DOMContentLoaded', function () {
                                 if (Object.keys(toSet).length > 0) { writes.push(chrome.storage.sync.set(toSet)); }
                                 if (response.customSelectors && Array.isArray(response.customSelectors)) {
                                     const customKey = `${currentSiteIdentifier}CustomHiddenElements`;
-                                    const obj = {}; obj[customKey] = response.customSelectors; writes.push(chrome.storage.sync.set(obj));
+                                    // An empty list can't be saved in Safari (see savePicks): delete it instead.
+                                    writes.push(response.customSelectors.length
+                                        ? chrome.storage.sync.set({ [customKey]: response.customSelectors })
+                                        : chrome.storage.sync.remove(customKey));
                                 }
                                 Promise.all(writes).then(() => {
                                     // Clear session selectors since they're now saved to storage
