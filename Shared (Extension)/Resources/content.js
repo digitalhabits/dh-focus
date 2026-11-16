@@ -1096,10 +1096,19 @@
             title.textContent = `${onPage} ${onPage === 1 ? 'item' : 'items'} hidden on this page`;
             title.style.fontWeight = '700';
             const body = document.createElement('div');
-            body.textContent = 'Open Focus to rename them or show them again.';
+            body.textContent = onPage === 1
+                ? 'Open Focus to rename it or show it again.'
+                : 'Open Focus to rename them or show them again.';
             body.style.opacity = '0.85';
-            pickerNote.appendChild(title);
-            pickerNote.appendChild(body);
+            // A click anywhere closes the note; the × only shows that it can.
+            const text = document.createElement('div');
+            text.append(title, body);
+            const close = makeIcon(ICON_CLOSE);
+            close.style.opacity = '0.85';
+            s.display = 'flex';
+            s.alignItems = 'flex-start';
+            s.gap = '12px';
+            pickerNote.append(text, close);
             pickerNote.addEventListener('click', hidePickerNote);
             if (!ensureMounted(pickerNote)) return;
             pickerNoteTimer = setTimeout(hidePickerNote, 6000);
