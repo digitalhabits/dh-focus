@@ -2832,6 +2832,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                     if (!response) return;
                     showSelectionState(response.active === true);
+                    // Close once picking starts: in Safari an open popup keeps the keyboard,
+                    // so the first click on the page went to closing it and Esc, Enter and
+                    // the arrow keys never reached the picker.
+                    if (active && response.active === true) window.close();
                 });
             });
         }
