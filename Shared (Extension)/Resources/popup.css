@@ -2545,6 +2545,57 @@ footer .friction-customisation {
     color: var(--text-secondary);
 }
 
+/* ⓘ beside a row's label; its tooltip opens above the row, full width. */
+.settings-row:has(.settings-info-tooltip) {
+    position: relative;
+}
+
+.settings-info-btn {
+    padding: 0;
+    margin-left: 4px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    display: inline-flex;
+    vertical-align: -2px;
+    color: var(--icon-color);
+    transition: color 0.2s;
+}
+
+.settings-info-btn:hover,
+.settings-info-btn:focus-visible,
+.settings-info-btn[aria-expanded="true"] {
+    color: var(--text-secondary);
+}
+
+.settings-info-tooltip {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: calc(100% - 4px);
+    z-index: 20;
+    display: none;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    box-shadow: var(--dropdown-shadow);
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+/* Mouse: hover or keyboard focus. Touch: only the tapped-open state, as :hover sticks after a tap. */
+@media (hover: hover) {
+    .settings-row:has(.settings-info-btn:hover, .settings-info-btn:focus-visible) .settings-info-tooltip {
+        display: block;
+    }
+}
+
+.settings-row:has(.settings-info-btn[aria-expanded="true"]) .settings-info-tooltip {
+    display: block;
+}
+
 .settings-row-control {
     justify-self: end;
     width: var(--settings-control-width);

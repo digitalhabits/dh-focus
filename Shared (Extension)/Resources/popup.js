@@ -216,6 +216,18 @@ document.addEventListener('DOMContentLoaded', function () {
         // Firefox sends no ping, so it gets no switch either.
         const USAGE_PING_KEY = 'usagePingEnabled';
 
+        // ⓘ on a settings row: a tap opens or closes its tooltip on touch screens
+        // (a mouse shows it on hover); a tap anywhere else closes it.
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest && e.target.closest('.settings-info-btn');
+            document.querySelectorAll('.settings-info-btn[aria-expanded="true"]').forEach(function (open) {
+                if (open !== btn) open.setAttribute('aria-expanded', 'false');
+            });
+            if (btn && window.matchMedia('(hover: none)').matches) {
+                btn.setAttribute('aria-expanded', btn.getAttribute('aria-expanded') === 'true' ? 'false' : 'true');
+            }
+        });
+
         function setupUsagePing() {
             const toggle = document.getElementById('usagePingToggle');
             if (!toggle) return;
