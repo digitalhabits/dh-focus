@@ -23,9 +23,12 @@ This update comes with some useful new features, design improvements, and under-
   click Hide. Before you hide it, you can make the area larger or smaller,
   also with the arrow keys.
 - After you hide something, you can give it a name or undo it straight away.
-  When you are done, a note says how many items are hidden on the page.
+  When you are done, a note says how many items are hidden on the page; click
+  it to close it.
 - Pick mode has a Done button next to the outline, and ends when you press
   Esc or go to another tab.
+- Pick… now closes the popup, so you can start choosing on the page straight
+  away.
 - If a page was open before Focus was installed or updated, the popup now asks
   you to reload it, instead of Pick… and the options doing nothing.
 - YouTube: fixed hiding the Subscriptions link when you are logged out.
@@ -51,13 +54,14 @@ This update comes with some useful new features, design improvements, and under-
 ### Privacy
 
 - [macos] The switch for the anonymous usage count is now under Admin at the
-  bottom of Settings.
+  bottom of Settings. Hover over the ⓘ beside it to see what it sends.
 - [ios] You can now turn off the anonymous usage count on iPhone and iPad,
-  under Admin at the bottom of Settings.
+  under Admin at the bottom of Settings. Tap the ⓘ beside it to see what it
+  sends.
 - [chrome] The switch for the anonymous usage count is now under Admin at the
-  bottom of Settings.
+  bottom of Settings. Hover over the ⓘ beside it to see what it sends.
 - [edge] The switch for the anonymous usage count is now under Admin at the
-  bottom of Settings.
+  bottom of Settings. Hover over the ⓘ beside it to see what it sends.
 
 ### Fixes & Polish
 
