@@ -131,15 +131,12 @@
     /*
      * Hiding takes two steps, like Safari's Hide Distracting Items: a click
      * chooses an area, then Hide (or Enter) hides it. Until then the area is
-     * pending, with a tab on its outline. pendingHistory holds the smaller
-     * areas it was grown from, so "Smaller" can step back down; without any,
-     * "Smaller" steps into the item nearest pendingPoint (where it was
-     * chosen, in page coordinates).
+     * pending, with a tab on its outline. "Smaller" steps into the item
+     * nearest pendingPoint (where it was chosen, in page coordinates).
      */
     let selectionOverlay = null;
     let pickTab = null;
     let pendingElement = null;
-    let pendingHistory = [];
     let pendingPoint = null;
     /*
      * Once hidden, the area keeps its space for a moment, outlined, with a
@@ -689,13 +686,24 @@
         return '';
     }
 
+    /** "Image" or "Video" when one fills most of the area, as a thumbnail with a badge on it. */
+    function mainMediaName(el) {
+        const media = el.querySelector('img, video, picture, iframe');
+        if (!media) return '';
+        const m = media.getBoundingClientRect();
+        const r = el.getBoundingClientRect();
+        return m.width * m.height >= 0.5 * r.width * r.height ? mediaName(media) : '';
+    }
+
     /** What the tab calls an area: its text in quotes, or how many items it holds. */
     function describeArea(el) {
-        const media = mediaName(el);
+        const items = childAreas(el).length;
+        const media = mediaName(el) || (items > 1 ? '' : mainMediaName(el));
         if (media) return media;
-        const items = areaItems(el);
-        if (items.length > 1) return `Area with ${items.length} items`;
-        const text = shortText(el, 26);
+        if (items > 1) return `Area with ${items} items`;
+        // No text: the name a screen reader would use, like "More actions" on a ⋮ button.
+        const named = el.matches('[aria-label]') ? el : el.querySelector('[aria-label]');
+        const text = shortText(el, 26) || (named && named.getAttribute('aria-label').trim().slice(0, 26));
         return text ? `“${text}”` : 'This area';
     }
 
@@ -712,37 +720,122 @@
         return shortText(el, 60) || 'Hidden area';
     }
 
-    /** The next area around el that is visibly bigger, or null at the top. */
-    function largerArea(el) {
-        const rect = el.getBoundingClientRect();
-        let parent = el.parentElement;
-        while (parent && parent !== document.body && parent !== document.documentElement) {
-            if (!sameBox(parent.getBoundingClientRect(), rect)) return parent;
-            parent = parent.parentElement;
-        }
-        return null;
-    }
-
+    /*
+     * Areas: what Larger and Smaller step through. Pages nest many
+     * elements in one box (a link around a span of the same size) or in no
+     * box at all (display: contents), so stepping element by element repeats
+     * boxes and puts siblings at different depths. An area is the outermost
+     * element of a run showing the same box; its items are the next boxes
+     * inside it. A box whose only item shows the same content (a heading
+     * around its line of text, a menu around its button) is one level, not
+     * two. Larger, Smaller and the tab's count all use this.
+     */
     function sameBox(a, b) {
         return Math.abs(a.left - b.left) < 1 && Math.abs(a.top - b.top) < 1 &&
             Math.abs(a.width - b.width) < 1 && Math.abs(a.height - b.height) < 1;
     }
 
-    /** The visibly smaller item inside el nearest where the area was chosen, or null. */
-    function smallerArea(el) {
+    function hasBox(r) {
+        return r.width >= 1 && r.height >= 1;
+    }
+
+    function isPageRoot(el) {
+        return !el || el === document.body || el === document.documentElement;
+    }
+
+    /** The outermost element showing the same box as el. */
+    function boxAreaOf(el) {
         const rect = el.getBoundingClientRect();
+        let area = el;
+        for (let p = el.parentElement; !isPageRoot(p); p = p.parentElement) {
+            const r = p.getBoundingClientRect();
+            if (!hasBox(r)) continue;
+            if (!sameBox(r, rect)) break;
+            area = p;
+        }
+        return area;
+    }
+
+    /** The box around this one (before merging levels), or null at the page. */
+    function rawParentArea(area) {
+        const rect = area.getBoundingClientRect();
+        for (let p = area.parentElement; !isPageRoot(p); p = p.parentElement) {
+            const r = p.getBoundingClientRect();
+            if (hasBox(r) && !sameBox(r, rect)) return boxAreaOf(p);
+        }
+        return null;
+    }
+
+    /** The boxes directly inside this one (before merging levels), in page order. */
+    function rawChildAreas(area) {
+        const rect = area.getBoundingClientRect();
+        const items = [];
+        (function look(el) {
+            // An image or icon is the smallest level: not its drawing's shapes.
+            if (el instanceof SVGElement) return;
+            for (const child of el.children) {
+                if (isOurUi(child)) continue;
+                const r = child.getBoundingClientRect();
+                // A wrapper with no box, or the same box, is not an item: look inside it.
+                if (!hasBox(r) || sameBox(r, rect)) look(child);
+                // Nor is an empty layer, like a click ripple or hover highlight.
+                else if (hasContent(child)) items.push(child);
+            }
+        })(area);
+        return items;
+    }
+
+    function hasContent(el) {
+        return /\S/.test(el.textContent || '') || el.matches(MEDIA_SELECTOR) || !!el.querySelector(MEDIA_SELECTOR);
+    }
+
+    const MEDIA_SELECTOR = 'img, video, picture, svg, iframe, canvas';
+    function sameContent(a, b) {
+        const text = el => (el.textContent || '').replace(/\s+/g, ' ').trim();
+        return text(a) === text(b) &&
+            a.querySelectorAll(MEDIA_SELECTOR).length === b.querySelectorAll(MEDIA_SELECTOR).length;
+    }
+
+    /** The one box inside area that shows all of its content, or null. */
+    function onlyItem(area) {
+        const items = rawChildAreas(area);
+        return items.length === 1 && sameContent(area, items[0]) ? items[0] : null;
+    }
+
+    /** The level el belongs to: its area, merged up through boxes that only wrap it. */
+    function areaOf(el) {
+        let area = boxAreaOf(el);
+        for (let p = rawParentArea(area); p && onlyItem(p) === area; p = rawParentArea(area)) area = p;
+        return area;
+    }
+
+    /** The level around this one, or null when only the page is left. */
+    function parentArea(area) {
+        const p = rawParentArea(area);
+        return p ? areaOf(p) : null;
+    }
+
+    /** The levels directly inside this one, in page order. */
+    function childAreas(area) {
+        let inner = area;
+        for (let next = onlyItem(inner); next; next = onlyItem(inner)) inner = next;
+        return rawChildAreas(inner);
+    }
+
+    /** The item inside this area nearest where it was chosen, or null. */
+    function smallerArea(area) {
+        const items = childAreas(area);
+        if (items.length === 0) return null;
+        const rect = area.getBoundingClientRect();
         const x = pendingPoint ? pendingPoint.x - window.scrollX : rect.left + rect.width / 2;
         const y = pendingPoint ? pendingPoint.y - window.scrollY : rect.top + rect.height / 2;
-        let best = null, bestRect = null, bestDistance = Infinity;
-        for (const child of el.children) {
-            if (isOurUi(child)) continue;
-            const r = child.getBoundingClientRect();
-            if (r.width < 1 || r.height < 1) continue;
+        let best = null, bestDistance = Infinity;
+        items.forEach(function (item) {
+            const r = item.getBoundingClientRect();
             const distance = Math.hypot(Math.max(r.left - x, 0, x - r.right), Math.max(r.top - y, 0, y - r.bottom));
-            if (distance < bestDistance) [best, bestRect, bestDistance] = [child, r, distance];
-        }
-        // A wrapper the same size as el isn't smaller: look inside it.
-        return best && sameBox(bestRect, rect) ? smallerArea(best) : best;
+            if (distance < bestDistance) [best, bestDistance] = [item, distance];
+        });
+        return best;
     }
 
     function createPickTab() {
@@ -786,13 +879,12 @@
         const hideButton = makePickerButton('Hide', 'chip', confirmPendingHide);
         hideButton.dataset.pickHide = '1';
         pickTab.appendChild(hideButton);
-        if (largerArea(pendingElement)) {
+        if (parentArea(pendingElement)) {
             const larger = makePickerButton('Larger', 'ghost', growPendingArea, ICON_LARGER);
             larger.title = 'Select a larger area (↑)';
             pickTab.appendChild(larger);
         }
-        // "Smaller" steps back down after "Larger", or into the area.
-        if (pendingHistory.length > 0 || smallerArea(pendingElement)) {
+        if (childAreas(pendingElement).length > 0) {
             const smaller = makePickerButton('Smaller', 'ghost', shrinkPendingArea, ICON_SMALLER);
             smaller.title = 'Back to the smaller area (↓)';
             pickTab.appendChild(smaller);
@@ -819,9 +911,8 @@
         pickTab.style.borderRadius = side === 'above' ? '8px 8px 0 0' : side === 'below' ? '0 0 8px 8px' : '0 0 8px 0';
     }
 
-    function setPendingArea(el, history) {
+    function setPendingArea(el) {
         pendingElement = el;
-        pendingHistory = history;
         hideHover();
         if (createSelectionOverlay()) positionOverlay(selectionOverlay, el);
         showPickTab();
@@ -829,7 +920,6 @@
 
     function clearPending() {
         pendingElement = null;
-        pendingHistory = [];
         pendingPoint = null;
         if (selectionOverlay) selectionOverlay.style.display = 'none';
         if (pickTab) {
@@ -844,21 +934,16 @@
         clearPending();
     }
 
+    // ↑: the area around. Where it was chosen stays inside, so ↓ comes back.
     function growPendingArea() {
-        if (!pendingElement) return;
-        const larger = largerArea(pendingElement);
-        if (!larger) return;
-        setPendingArea(larger, pendingHistory.concat([pendingElement]));
+        const larger = pendingElement && parentArea(pendingElement);
+        if (larger) setPendingArea(larger);
     }
 
+    // ↓: the item inside nearest where the area was chosen.
     function shrinkPendingArea() {
-        if (pendingHistory.length === 0) {
-            const inner = pendingElement && smallerArea(pendingElement);
-            if (inner) setPendingArea(inner, []);
-            return;
-        }
-        const smaller = pendingHistory[pendingHistory.length - 1];
-        setPendingArea(smaller, pendingHistory.slice(0, -1));
+        const smaller = pendingElement && smallerArea(pendingElement);
+        if (smaller) setPendingArea(smaller);
     }
 
     function confirmPendingHide() {
@@ -1306,7 +1391,7 @@
         if (!position) return;
         if (keepHoverForTag(position.x, position.y)) return;
         const el = pickableElementAt(position.x, position.y);
-        if (el) showHover(el);
+        if (el) showHover(areaOf(el));
         else hideHover();
     }
 
@@ -1346,7 +1431,7 @@
         // Moving on keeps the name of the area just hidden.
         finishNaming();
         pendingPoint = { x: position.x + window.scrollX, y: position.y + window.scrollY };
-        setPendingArea(el, []);
+        setPendingArea(areaOf(el));
     }
 
     function selectElementOnClick(event) {
