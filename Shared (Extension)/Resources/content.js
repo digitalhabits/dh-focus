@@ -776,8 +776,14 @@
         pickTab.appendChild(close);
 
         placePickTab();
-        // Enter hides, so focus starts on Hide.
-        try { hideButton.focus({ preventScroll: true }); } catch (e) { /* not focusable yet */ }
+        // Enter hides, so focus starts on Hide. Again once the choosing click
+        // has finished: Safari kept the arrow keys from the page until a
+        // second click otherwise.
+        const focusHide = () => {
+            if (hideButton.isConnected) hideButton.focus({ preventScroll: true });
+        };
+        try { focusHide(); } catch (e) { /* not focusable yet */ }
+        setTimeout(focusHide, 0);
     }
 
     function placePickTab() {
