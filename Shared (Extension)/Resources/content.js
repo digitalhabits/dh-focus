@@ -526,6 +526,10 @@
      * area fills the screen. Returns which of those it used.
      */
     function attachToOutline(node, rect, gap) {
+        // clientWidth/Height leave out scrollbars, which innerWidth/Height include.
+        const viewWidth = document.documentElement.clientWidth || window.innerWidth;
+        const viewHeight = document.documentElement.clientHeight || window.innerHeight;
+        node.style.maxWidth = `${viewWidth}px`;
         const height = node.offsetHeight;
         const width = node.offsetWidth;
         let top;
@@ -533,14 +537,15 @@
         if (rect.top - height - gap >= 0) {
             top = rect.top - height - gap;
             side = 'above';
-        } else if (rect.bottom + height + gap <= window.innerHeight) {
+        } else if (rect.bottom + height + gap <= viewHeight) {
             top = rect.bottom + gap;
             side = 'below';
         } else {
             top = Math.max(0, rect.top);
             side = 'inside';
         }
-        const left = Math.min(Math.max(rect.left, 0), Math.max(0, window.innerWidth - width));
+        top = Math.min(top, Math.max(0, viewHeight - height));
+        const left = Math.min(Math.max(rect.left, 0), Math.max(0, viewWidth - width));
         node.style.top = `${Math.round(top)}px`;
         node.style.left = `${Math.round(left)}px`;
         return side;
