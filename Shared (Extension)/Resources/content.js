@@ -132,12 +132,15 @@
      * Hiding takes two steps, like Safari's Hide Distracting Items: a click
      * chooses an area, then Hide (or Enter) hides it. Until then the area is
      * pending, with a tab on its outline. pendingHistory holds the smaller
-     * areas it was grown from, so "Smaller" can step back down.
+     * areas it was grown from, so "Smaller" can step back down; without any,
+     * "Smaller" steps into the item nearest pendingPoint (where it was
+     * chosen, in page coordinates).
      */
     let selectionOverlay = null;
     let pickTab = null;
     let pendingElement = null;
     let pendingHistory = [];
+    let pendingPoint = null;
     /*
      * Once hidden, the area keeps its space for a moment, outlined, with a
      * field to name the pick and an Undo:
@@ -709,13 +712,32 @@
         const rect = el.getBoundingClientRect();
         let parent = el.parentElement;
         while (parent && parent !== document.body && parent !== document.documentElement) {
-            const p = parent.getBoundingClientRect();
-            const sameBox = Math.abs(p.left - rect.left) < 1 && Math.abs(p.top - rect.top) < 1 &&
-                Math.abs(p.width - rect.width) < 1 && Math.abs(p.height - rect.height) < 1;
-            if (!sameBox) return parent;
+            if (!sameBox(parent.getBoundingClientRect(), rect)) return parent;
             parent = parent.parentElement;
         }
         return null;
+    }
+
+    function sameBox(a, b) {
+        return Math.abs(a.left - b.left) < 1 && Math.abs(a.top - b.top) < 1 &&
+            Math.abs(a.width - b.width) < 1 && Math.abs(a.height - b.height) < 1;
+    }
+
+    /** The visibly smaller item inside el nearest where the area was chosen, or null. */
+    function smallerArea(el) {
+        const rect = el.getBoundingClientRect();
+        const x = pendingPoint ? pendingPoint.x - window.scrollX : rect.left + rect.width / 2;
+        const y = pendingPoint ? pendingPoint.y - window.scrollY : rect.top + rect.height / 2;
+        let best = null, bestRect = null, bestDistance = Infinity;
+        for (const child of el.children) {
+            if (isOurUi(child)) continue;
+            const r = child.getBoundingClientRect();
+            if (r.width < 1 || r.height < 1) continue;
+            const distance = Math.hypot(Math.max(r.left - x, 0, x - r.right), Math.max(r.top - y, 0, y - r.bottom));
+            if (distance < bestDistance) [best, bestRect, bestDistance] = [child, r, distance];
+        }
+        // A wrapper the same size as el isn't smaller: look inside it.
+        return best && sameBox(bestRect, rect) ? smallerArea(best) : best;
     }
 
     function createPickTab() {
@@ -764,8 +786,8 @@
             larger.title = 'Select a larger area (↑)';
             pickTab.appendChild(larger);
         }
-        // "Smaller" only makes sense once the area has been grown.
-        if (pendingHistory.length > 0) {
+        // "Smaller" steps back down after "Larger", or into the area.
+        if (pendingHistory.length > 0 || smallerArea(pendingElement)) {
             const smaller = makePickerButton('Smaller', 'ghost', shrinkPendingArea, ICON_SMALLER);
             smaller.title = 'Back to the smaller area (↓)';
             pickTab.appendChild(smaller);
@@ -803,6 +825,7 @@
     function clearPending() {
         pendingElement = null;
         pendingHistory = [];
+        pendingPoint = null;
         if (selectionOverlay) selectionOverlay.style.display = 'none';
         if (pickTab) {
             pickTab.remove();
@@ -824,7 +847,11 @@
     }
 
     function shrinkPendingArea() {
-        if (pendingHistory.length === 0) return;
+        if (pendingHistory.length === 0) {
+            const inner = pendingElement && smallerArea(pendingElement);
+            if (inner) setPendingArea(inner, []);
+            return;
+        }
         const smaller = pendingHistory[pendingHistory.length - 1];
         setPendingArea(smaller, pendingHistory.slice(0, -1));
     }
@@ -1313,6 +1340,7 @@
         event.stopImmediatePropagation();
         // Moving on keeps the name of the area just hidden.
         finishNaming();
+        pendingPoint = { x: position.x + window.scrollX, y: position.y + window.scrollY };
         setPendingArea(el, []);
     }
 
