@@ -20,8 +20,11 @@ This update comes with some useful new features, design improvements, and under-
 ### Hide Distracting Elements
 
 - Hiding part of a page now takes two steps: click it to select it, then
-  click Hide. Before you hide it, you can make the area larger or smaller,
-  also with the arrow keys.
+  click Hide. Before you hide it, Up and Down (or ↑ and ↓) choose the area
+  around it or a smaller area inside it.
+- Once an area is selected, ‹ and › (or ← and →) move to the items beside it,
+  such as the next video in a row. The tab shows which one you are on, like
+  "Item 2 of 5".
 - After you hide something, you can give it a name or undo it straight away.
   When you are done, a note says how many items are hidden on the page; click
   it to close it.
@@ -32,6 +35,10 @@ This update comes with some useful new features, design improvements, and under-
 - If a page was open before Focus was installed or updated, the popup now asks
   you to reload it, instead of Pick… and the options doing nothing.
 - YouTube: fixed hiding the Subscriptions link when you are logged out.
+- [macos] Removing your last hidden item in the popup now works. Before, it
+  stayed hidden.
+- [ios] Removing your last hidden item in the popup now works. Before, it
+  stayed hidden.
 
 ### Redirects
 
