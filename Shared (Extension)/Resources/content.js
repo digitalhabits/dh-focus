@@ -525,15 +525,22 @@
         return button;
     }
 
+    /**
+     * The window's size without scrollbars, which innerWidth/Height include.
+     * Pages with no doctype report the window on <body>: <html> there is the whole page.
+     */
+    function viewSize() {
+        const root = document.compatMode === 'BackCompat' ? document.body : document.documentElement;
+        return { width: (root && root.clientWidth) || window.innerWidth, height: (root && root.clientHeight) || window.innerHeight };
+    }
+
     /*
      * Put a tag or tab on an outline: sitting on its top edge, or under the
      * bottom edge if there's no room above, or just inside the top if the
      * area fills the screen. Returns which of those it used.
      */
     function attachToOutline(node, rect, gap) {
-        // clientWidth/Height leave out scrollbars, which innerWidth/Height include.
-        const viewWidth = document.documentElement.clientWidth || window.innerWidth;
-        const viewHeight = document.documentElement.clientHeight || window.innerHeight;
+        const { width: viewWidth, height: viewHeight } = viewSize();
         node.style.maxWidth = `${viewWidth}px`;
         const height = node.offsetHeight;
         const width = node.offsetWidth;
@@ -939,7 +946,7 @@
      * and → can be found, and used on touch screens. "2/5" in narrow windows. Both ends wrap round.
      */
     function isNarrowView() {
-        return (document.documentElement.clientWidth || window.innerWidth) < 600;
+        return viewSize().width < 600;
     }
 
     function appendItemStepper() {
