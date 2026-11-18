@@ -423,10 +423,12 @@
         svg.appendChild(path);
         return svg;
     }
-    // Chevrons up and down, and a cross.
+    // Chevrons up and down, and ‹ › for the item stepper; a cross.
     const ICON_UP = 'M3.5 10 8 5.5l4.5 4.5';
     const ICON_DOWN = 'M3.5 6 8 10.5 12.5 6';
     const ICON_CLOSE = 'M4 4l8 8M12 4l-8 8';
+    const ICON_PREVIOUS = 'M10 3.5 5.5 8l4.5 4.5';
+    const ICON_NEXT = 'M6 3.5 10.5 8 6 12.5';
 
     /** Our own element, styled inline so the page's CSS can't reshape it. */
     function makeUi(tag) {
@@ -523,15 +525,22 @@
         return button;
     }
 
+    /**
+     * The window's size without scrollbars, which innerWidth/Height include.
+     * Pages with no doctype report the window on <body>: <html> there is the whole page.
+     */
+    function viewSize() {
+        const root = document.compatMode === 'BackCompat' ? document.body : document.documentElement;
+        return { width: (root && root.clientWidth) || window.innerWidth, height: (root && root.clientHeight) || window.innerHeight };
+    }
+
     /*
      * Put a tag or tab on an outline: sitting on its top edge, or under the
      * bottom edge if there's no room above, or just inside the top if the
      * area fills the screen. Returns which of those it used.
      */
     function attachToOutline(node, rect, gap) {
-        // clientWidth/Height leave out scrollbars, which innerWidth/Height include.
-        const viewWidth = document.documentElement.clientWidth || window.innerWidth;
-        const viewHeight = document.documentElement.clientHeight || window.innerHeight;
+        const { width: viewWidth, height: viewHeight } = viewSize();
         node.style.maxWidth = `${viewWidth}px`;
         const height = node.offsetHeight;
         const width = node.offsetWidth;
@@ -661,23 +670,6 @@
 
     // --- The chosen area and its tab ---
 
-    // Things a reader would count as one item in an area.
-    const AREA_ITEM_SELECTOR = 'a[href], button, input, select, textarea, img, video, picture, svg, iframe, ' +
-        '[role="button"], [role="link"], li, h1, h2, h3, h4, h5, h6, p';
-
-    /** The outermost items in an area, so a link's image and text are one. */
-    function areaItems(el) {
-        const items = [];
-        const nodes = el.querySelectorAll(AREA_ITEM_SELECTOR);
-        for (let i = 0; i < nodes.length; i++) {
-            const parent = nodes[i].parentElement;
-            const outer = parent && parent.closest(AREA_ITEM_SELECTOR);
-            if (outer && el.contains(outer)) continue;
-            items.push(nodes[i]);
-        }
-        return items;
-    }
-
     function shortText(el, max) {
         const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
         if (!text || text.length <= max) return text;
@@ -713,11 +705,11 @@
         return text ? `“${text}”` : 'This area';
     }
 
-    /** A name for a new pick, like "Safari + 4 more". */
+    /** A name for a new pick, like "Safari + 4 more", counting items as the tab does. */
     function defaultPickName(el) {
         const media = mediaName(el);
         if (media) return media;
-        const items = areaItems(el);
+        const items = childAreas(el);
         if (items.length > 1) {
             let first = '';
             for (let i = 0; i < items.length && !first; i++) first = shortText(items[i], 30);
@@ -727,14 +719,14 @@
     }
 
     /*
-     * Areas: what Up and Down step through. Pages nest many
+     * Areas: what Up, Down, ← and → step through. Pages nest many
      * elements in one box (a link around a span of the same size) or in no
      * box at all (display: contents), so stepping element by element repeats
      * boxes and puts siblings at different depths. An area is the outermost
      * element of a run showing the same box; its items are the next boxes
      * inside it. A box whose only item shows the same content (a heading
      * around its line of text, a menu around its button) is one level, not
-     * two. Up, Down and the tab's count all use this.
+     * two. Up, Down, ←, → and the tab's count all use this.
      */
     function sameBox(a, b) {
         return Math.abs(a.left - b.left) < 1 && Math.abs(a.top - b.top) < 1 &&
@@ -844,6 +836,16 @@
         return best;
     }
 
+    /** The next (step 1) or previous (-1) item beside this area, or null at the end. */
+    function siblingArea(area, step) {
+        const parent = parentArea(area);
+        if (!parent) return null;
+        const items = childAreas(parent);
+        const i = items.indexOf(area);
+        // Wraps around: → on the last item goes to the first.
+        return i === -1 || items.length < 2 ? null : items[(i + step + items.length) % items.length];
+    }
+
     function createPickTab() {
         if (!pickTab) {
             pickTab = makeUi('div');
@@ -870,6 +872,10 @@
 
     function showPickTab() {
         if (!pendingElement || !createPickTab()) return;
+        // A button pressed from the keyboard keeps focus, so Enter presses it again rather than Hide.
+        const active = document.activeElement;
+        let keptKey = '';
+        try { if (pickTab.contains(active) && active.matches(':focus-visible')) keptKey = active.dataset.pickKey; } catch (e) { /* old browser */ }
         pickTab.textContent = '';
 
         const label = document.createElement('span');
@@ -881,10 +887,11 @@
         label.style.textOverflow = 'ellipsis';
         label.style.minWidth = '0';
         pickTab.appendChild(label);
+        appendItemStepper();
 
         const hideButton = makePickerButton('Hide', 'chip', confirmPendingHide);
         hideButton.dataset.pickHide = '1';
-        // As much room after Hide as the area's name leaves before it.
+        // As much room after Hide as the item stepper leaves before it.
         hideButton.style.marginRight = '6px';
         pickTab.appendChild(hideButton);
         // Narrow (phones): chevrons only, so the row fits.
@@ -892,6 +899,7 @@
         const level = (name, onActivate, icon, title) => {
             const button = makePickerButton(narrow ? '' : name, 'ghost', onActivate, icon);
             button.setAttribute('aria-label', name);
+            button.dataset.pickKey = name;
             button.title = title;
             // Tighter than other buttons: "Up" and Down's chevron sat 24px apart.
             button.style.padding = '6px';
@@ -910,9 +918,12 @@
         // Enter hides, so focus starts on Hide. Again once the choosing click
         // has finished: Safari kept the arrow keys from the page until a
         // second click otherwise.
+        const kept = keptKey && pickTab.querySelector(`[data-pick-key="${keptKey}"]`);
         const focusHide = () => {
+            if (kept) return kept.isConnected && kept.focus({ preventScroll: true });
             if (!hideButton.isConnected || document.activeElement === hideButton) return;
-            hideButton.dataset.quietFocus = '1';
+            // Quiet unless the pressed button went away: then show that Enter now hides.
+            if (!keptKey) hideButton.dataset.quietFocus = '1';
             hideButton.focus({ preventScroll: true });
             // Not focused after all: don't let the flag swallow a later Tab's ring.
             if (document.activeElement !== hideButton) delete hideButton.dataset.quietFocus;
@@ -921,9 +932,41 @@
         setTimeout(focusHide, 0);
     }
 
-    // Phones: Up and Down show only their chevrons, so the tab fits.
+    /*
+     * ‹ Item 2 of 5 ›: shown when the chosen area has items beside it, so ←
+     * and → can be found, and used on touch screens. "2/5" in narrow windows. Both ends wrap round.
+     */
     function isNarrowView() {
-        return (document.documentElement.clientWidth || window.innerWidth) < 600;
+        return viewSize().width < 600;
+    }
+
+    function appendItemStepper() {
+        const parent = parentArea(pendingElement);
+        const items = parent ? childAreas(parent) : [];
+        const index = items.indexOf(pendingElement);
+        if (items.length < 2 || index === -1) return;
+
+        const step = (direction, icon, name, key) => {
+            const button = makePickerButton('', 'ghost', () => movePendingArea(direction), icon);
+            button.setAttribute('aria-label', name);
+            button.dataset.pickKey = name;
+            button.title = `${name} (${key})`;
+            button.style.padding = '6px';
+            return button;
+        };
+        const count = document.createElement('span');
+        count.textContent = !isNarrowView() ? `Item ${index + 1} of ${items.length}` : `${index + 1}/${items.length}`;
+        count.style.whiteSpace = 'nowrap';
+        count.style.fontVariantNumeric = 'tabular-nums';
+        count.style.opacity = '0.9';
+
+        const group = document.createElement('span');
+        group.style.display = 'inline-flex';
+        group.style.alignItems = 'center';
+        group.style.flex = 'none';
+        group.style.marginRight = '6px';
+        group.append(step(-1, ICON_PREVIOUS, 'Previous item', '←'), count, step(1, ICON_NEXT, 'Next item', '→'));
+        pickTab.appendChild(group);
     }
 
     function placePickTab() {
@@ -965,6 +1008,16 @@
     function shrinkPendingArea() {
         const smaller = pendingElement && smallerArea(pendingElement);
         if (smaller) setPendingArea(smaller);
+    }
+
+    // ← and →: the item beside, inside the same area.
+    function movePendingArea(step) {
+        const next = pendingElement && siblingArea(pendingElement, step);
+        if (!next) return;
+        next.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        const r = next.getBoundingClientRect();
+        pendingPoint = { x: r.left + r.width / 2 + window.scrollX, y: r.top + r.height / 2 + window.scrollY };
+        setPendingArea(next);
     }
 
     function confirmPendingHide() {
@@ -1391,9 +1444,10 @@
             else stopSelecting(false);
             return;
         }
-        if (!pendingElement) return;
+        // With Alt, Ctrl or ⌘ held the keys are the browser's, like Alt+← for Back.
+        if (!pendingElement || event.altKey || event.ctrlKey || event.metaKey) return;
         if (event.key === 'Enter') {
-            // A focused "Up", "Down" or × keeps its own Enter.
+            // A focused "Up", "Down", ‹, › or × keeps its own Enter.
             const onOtherButton = target instanceof Element &&
                 target.closest('button') && pickTab && pickTab.contains(target) && !target.hasAttribute('data-pick-hide');
             if (onOtherButton) return;
@@ -1405,6 +1459,9 @@
         } else if (event.key === 'ArrowDown') {
             consume();
             shrinkPendingArea();
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            consume();
+            movePendingArea(event.key === 'ArrowRight' ? 1 : -1);
         }
     }
 

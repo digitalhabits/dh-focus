@@ -38,7 +38,7 @@ The extension makes it easier to control your time & attention online, by lettin
 
 Click the Focus icon in your browser's toolbar to see the options for the website you are on. Tick the parts you want to hide, or turn on Greyscale, Delay or Redirect.
 
-To hide anything else, click **Pick…** and click the part of the page you want gone. Before anything is hidden, you can make the area larger or smaller, then click **Hide**. You can give each hidden part a name, and show it again from the popup at any time.
+To hide anything else, click **Pick…** and click the part of the page you want gone. Before anything is hidden, you can make the area larger or smaller, or move to the part beside it, then click **Hide**. On a computer, the arrow keys do this too: up and down for larger and smaller, left and right for the part beside it. You can give each hidden part a name, and show it again from the popup at any time.
 
 Your choices are kept per website. To try something for one visit only, turn off **Auto-save changes to hidden elements** in Settings.
 
