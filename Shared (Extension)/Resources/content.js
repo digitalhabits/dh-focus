@@ -670,23 +670,6 @@
 
     // --- The chosen area and its tab ---
 
-    // Things a reader would count as one item in an area.
-    const AREA_ITEM_SELECTOR = 'a[href], button, input, select, textarea, img, video, picture, svg, iframe, ' +
-        '[role="button"], [role="link"], li, h1, h2, h3, h4, h5, h6, p';
-
-    /** The outermost items in an area, so a link's image and text are one. */
-    function areaItems(el) {
-        const items = [];
-        const nodes = el.querySelectorAll(AREA_ITEM_SELECTOR);
-        for (let i = 0; i < nodes.length; i++) {
-            const parent = nodes[i].parentElement;
-            const outer = parent && parent.closest(AREA_ITEM_SELECTOR);
-            if (outer && el.contains(outer)) continue;
-            items.push(nodes[i]);
-        }
-        return items;
-    }
-
     function shortText(el, max) {
         const text = (el.innerText || el.textContent || '').replace(/\s+/g, ' ').trim();
         if (!text || text.length <= max) return text;
@@ -722,11 +705,11 @@
         return text ? `“${text}”` : 'This area';
     }
 
-    /** A name for a new pick, like "Safari + 4 more". */
+    /** A name for a new pick, like "Safari + 4 more", counting items as the tab does. */
     function defaultPickName(el) {
         const media = mediaName(el);
         if (media) return media;
-        const items = areaItems(el);
+        const items = childAreas(el);
         if (items.length > 1) {
             let first = '';
             for (let i = 0; i < items.length && !first; i++) first = shortText(items[i], 30);
