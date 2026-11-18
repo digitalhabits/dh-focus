@@ -1445,7 +1445,8 @@
             else stopSelecting(false);
             return;
         }
-        if (!pendingElement) return;
+        // With Alt, Ctrl or ⌘ held the keys are the browser's, like Alt+← for Back.
+        if (!pendingElement || event.altKey || event.ctrlKey || event.metaKey) return;
         if (event.key === 'Enter') {
             // A focused "Up", "Down", ‹, › or × keeps its own Enter.
             const onOtherButton = target instanceof Element &&
