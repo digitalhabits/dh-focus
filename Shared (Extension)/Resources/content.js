@@ -872,6 +872,10 @@
 
     function showPickTab() {
         if (!pendingElement || !createPickTab()) return;
+        // A button pressed from the keyboard keeps focus, so Enter presses it again rather than Hide.
+        const active = document.activeElement;
+        let keptKey = '';
+        try { if (pickTab.contains(active) && active.matches(':focus-visible')) keptKey = active.dataset.pickKey; } catch (e) { /* old browser */ }
         pickTab.textContent = '';
 
         const label = document.createElement('span');
@@ -895,6 +899,7 @@
         const level = (name, onActivate, icon, title) => {
             const button = makePickerButton(narrow ? '' : name, 'ghost', onActivate, icon);
             button.setAttribute('aria-label', name);
+            button.dataset.pickKey = name;
             button.title = title;
             // Tighter than other buttons: "Up" and Down's chevron sat 24px apart.
             button.style.padding = '6px';
@@ -913,9 +918,12 @@
         // Enter hides, so focus starts on Hide. Again once the choosing click
         // has finished: Safari kept the arrow keys from the page until a
         // second click otherwise.
+        const kept = keptKey && pickTab.querySelector(`[data-pick-key="${keptKey}"]`);
         const focusHide = () => {
+            if (kept) return kept.isConnected && kept.focus({ preventScroll: true });
             if (!hideButton.isConnected || document.activeElement === hideButton) return;
-            hideButton.dataset.quietFocus = '1';
+            // Quiet unless the pressed button went away: then show that Enter now hides.
+            if (!keptKey) hideButton.dataset.quietFocus = '1';
             hideButton.focus({ preventScroll: true });
             // Not focused after all: don't let the flag swallow a later Tab's ring.
             if (document.activeElement !== hideButton) delete hideButton.dataset.quietFocus;
@@ -941,6 +949,7 @@
         const step = (direction, icon, name, key) => {
             const button = makePickerButton('', 'ghost', () => movePendingArea(direction), icon);
             button.setAttribute('aria-label', name);
+            button.dataset.pickKey = name;
             button.title = `${name} (${key})`;
             button.style.padding = '6px';
             return button;
