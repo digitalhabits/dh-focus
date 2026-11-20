@@ -2981,7 +2981,11 @@ document.addEventListener('DOMContentLoaded', function () {
             // Hide the "needs to initialise" fallback — this is an intentional unsupported-page state.
             if (errorContainer) errorContainer.style.display = 'none';
             if (popupContent) {
-                popupContent.innerHTML = `<p class='error-message'>${message}</p>`;
+                // The message can hold part of the tab's address, so it goes in as text, never as HTML.
+                const messageEl = document.createElement('p');
+                messageEl.className = 'error-message';
+                messageEl.textContent = message;
+                popupContent.replaceChildren(messageEl);
                 popupContent.style.display = 'block';
             }
             if (delayContent) delayContent.style.display = 'none';
